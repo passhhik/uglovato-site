@@ -1,0 +1,24 @@
+MediaPipe Pose, by The MediaPipe Authors (Google).
+Licensed under the Apache License, Version 2.0. The full text is in LICENSE.txt next to this file.
+Source: npm package @mediapipe/pose, version 0.5.1675469404 (project: https://github.com/google/mediapipe).
+
+The files in this folder are taken from that package and are not changed
+(checked byte for byte against the package published on npm):
+  pose.js
+  pose_solution_packed_assets_loader.js
+  pose_solution_packed_assets.data      (the person detector, BlazePose)
+  pose_solution_simd_wasm_bin.js, pose_solution_simd_wasm_bin.wasm
+  pose_landmark_full.tflite             (body points and person mask, BlazePose GHUM, "full")
+  pose_web.binarypb                     (the processing graph)
+
+Three of them (pose_solution_packed_assets.data, pose_landmark_full.tflite, pose_web.binarypb)
+are stored here as base64 text, with ".b64.txt" added to the name: the hosting only serves
+file types it knows. Decoded, they are the same bytes as in the package.
+
+How Polygon-97 uses them: the page downloads and decodes the three data files itself and
+hands the bytes to the library. It reads pose.js as text and, where the host does not let
+scripts start from files, runs it with one internal function redirected in memory (the one
+that loads the two helper scripts), so that the helpers are loaded by the page itself.
+The script files stay as published by Google.
+
+The model runs entirely on the user's device. Photos are not sent anywhere.

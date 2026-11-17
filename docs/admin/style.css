@@ -1,0 +1,142 @@
+/* Админка: тот же язык, что у сайта — белый лист, Arial Narrow, чёрные кнопки-пилюли. Инструмент, а не витрина. */
+@font-face{ font-family:'Arimo Narrow PN'; font-weight:400; font-display:swap; src:url('./narrow-cyrillic-400.woff2') format('woff2'); unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116; }
+@font-face{ font-family:'Arimo Narrow PN'; font-weight:700; font-display:swap; src:url('./narrow-cyrillic-700.woff2') format('woff2'); unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116; }
+@font-face{ font-family:'Arimo Narrow PN'; font-weight:400; font-display:swap; src:url('./narrow-latin-400.woff2') format('woff2'); unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+@font-face{ font-family:'Arimo Narrow PN'; font-weight:700; font-display:swap; src:url('./narrow-latin-700.woff2') format('woff2'); unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+
+:root{
+  --fg:#000; --paper:#fff; --mute:#666; --line:#DDDDE0; --soft:#F3F3F5; --warn:#A14A00; --bad:#B3261E; --ok:#0B6B3A;
+  --font:'Arial Narrow','Arimo Narrow PN',Arial,sans-serif;
+  --bar:60px; --r:12px; --rail:84px; --list:272px; --pad:28px;
+}
+*,*::before,*::after{ box-sizing:border-box; }
+html,body{ height:100%; }
+body{ margin:0; background:var(--paper); color:var(--fg); font:400 17px/1.35 var(--font); -webkit-font-smoothing:antialiased; overflow:hidden; }
+h1,h2,h3,p{ margin:0; }
+button,input,select,textarea{ font:inherit; color:inherit; }
+[hidden]{ display:none !important; }
+:focus-visible{ outline:2px solid #000; outline-offset:2px; }
+.row{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
+.hint{ color:var(--mute); font-size:.88em; line-height:1.3; }
+.error{ color:var(--bad); }
+
+.btn{ display:inline-flex; align-items:center; justify-content:center; gap:.4em; min-height:38px; padding:0 16px; border:0; border-radius:999px; background:#000; color:#fff; box-shadow:inset 0 0 0 2px #000; text-decoration:none; white-space:nowrap; cursor:pointer; transition:background-color .15s, color .15s; }
+.btn:hover{ background:#fff; color:#000; }
+.btn--line{ background:#fff; color:#000; }
+.btn--line:hover{ background:#000; color:#fff; }
+.btn--sm{ min-height:30px; padding:0 12px; font-size:.9em; box-shadow:inset 0 0 0 1.5px #000; }
+.btn:disabled{ background:#C9C9CE; color:#fff; box-shadow:none; cursor:default; }
+
+/* ---------- верхняя панель ---------- */
+.bar{ position:fixed; inset:0 0 auto 0; z-index:20; display:flex; align-items:center; justify-content:space-between; gap:16px; height:var(--bar); padding:0 16px; border-bottom:1px solid var(--line); background:#fff; }
+.bar-l,.bar-r{ display:flex; align-items:center; gap:12px; min-width:0; }
+.bar-title{ font-size:1.2em; font-weight:400; }
+.status{ color:var(--mute); font-size:.92em; white-space:nowrap; }
+.status.is-dirty{ color:var(--warn); }
+.langs,.seg{ display:inline-flex; padding:2px; border-radius:999px; background:var(--soft); }
+.langs button,.seg button{ min-height:30px; padding:0 12px; border:0; border-radius:999px; background:none; font-size:.9em; cursor:pointer; white-space:nowrap; }
+.langs button[aria-pressed="true"],.seg button[aria-pressed="true"]{ background:#000; color:#fff; }
+
+/* ---------- первый экран ---------- */
+.gate-card{ max-width:560px; }
+.gate-card h1{ font:400 clamp(30px, 4vw, 46px)/1.02 var(--font); letter-spacing:-.01em; text-wrap:balance; }
+.gate-card > p{ margin-top:14px; font-size:1.12em; text-wrap:pretty; }
+.gate-card .row{ margin-top:22px; }
+.gate-card .hint{ margin-top:12px; font-size:.92em; }
+
+.edit{ padding:22px var(--pad) 96px; }
+.edit-in{ max-width:760px; margin:0 auto; }
+.edit-head{ margin-bottom:26px; }
+.edit-head h1{ font:400 2em/1.05 var(--font); letter-spacing:-.01em; text-wrap:balance; }
+
+/* ---------- поля ---------- */
+.f{ display:block; margin-bottom:14px; }
+.f > span,.fs > legend,.lbl{ display:block; margin-bottom:4px; color:var(--mute); font-size:.9em; }
+.f input[type="text"],.f input[type="password"],.f input[type="number"],.f input[type="url"],.f input[type="email"],.f select,.f textarea,.inp{ display:block; width:100%; min-height:40px; padding:8px 11px; border:1px solid var(--line); border-radius:10px; background:#fff; line-height:1.3; }
+.f textarea{ resize:vertical; min-height:64px; }
+.f input:hover,.f select:hover,.f textarea:hover,.inp:hover{ border-color:#9A9AA0; }
+.f input:focus-visible,.f select:focus-visible,.f textarea:focus-visible,.inp:focus-visible{ outline:2px solid #000; outline-offset:0; border-color:#000; }
+.f .hint{ display:block; margin-top:4px; }
+.f.is-bad input{ border-color:var(--bad); }
+
+.dlg{ width:min(560px, calc(100vw - 32px)); max-height:calc(100vh - 32px); padding:0; border:0; border-radius:18px; background:#fff; color:#000; box-shadow:0 24px 60px rgba(0,0,0,.28); overflow:auto; }
+.dlg::backdrop{ background:rgba(0,0,0,.42); }
+.dlg-card{ padding:24px 24px 20px; }
+.dlg-card h2{ font:400 1.7em/1.05 var(--font); letter-spacing:-.01em; }
+.dlg-card p{ margin-top:10px; text-wrap:pretty; }
+.dlg-card .row{ margin-top:18px; }
+
+@media (prefers-reduced-motion: reduce){ *{ transition:none !important; } }
+.login{ width:min(380px, 100%); }
+.login .f{ margin-top:22px; }
+.login .error{ margin-top:10px; }
+
+/* Окно кабинета, отдельное и внутри раздела статистики портфолио. */
+body{ color-scheme:light; }
+.bar-title{ color:inherit; text-decoration:none; }
+.bar-title:hover{ text-decoration:underline; }
+.edit{ position:absolute; inset:var(--bar) 0 0; overflow:auto; }
+.edit-in--wide{ max-width:1180px; }
+.embedded .bar,.embedded .edit-head{ display:none; }
+.embedded .edit{ inset:0; }
+.edit-in:has(#access:not([hidden])) .edit-head{ display:none; }
+.edit:has(#access:not([hidden])){ padding-bottom:22px; }
+.edit-in:has(#access:not([hidden])){ min-height:100%; display:flex; flex-direction:column; }
+.embedded .stats-project-bar,.edit-in:has(#access:not([hidden])) .stats-project-bar{ margin-top:0; }
+.access-area:has(#access:not([hidden])){
+  flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px 0;
+}
+.access-area:has(#access:not([hidden])) > p{ width:min(380px,100%); }
+.access-area .status{ white-space:normal; }
+.access-area .status:not(:empty),.role-hint{ margin:10px 0; }
+.status.is-error{ color:var(--bad); }
+.filter-date{ display:flex; align-items:center; flex-wrap:wrap; gap:4px 8px; margin:0; }
+.filter-date > span{ margin:0; }
+.filter-date .inp{ width:auto; min-width:0; }
+
+#management{ max-width:900px; }
+#management .db-card + .db-card{ margin-top:14px; }
+.section-head{ display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px; margin-bottom:6px; }
+.section-head h2,.receipt h3{ font-size:1.05em; }
+#create{ align-items:flex-end; margin-top:14px; }
+#create .f{ margin:0; }
+#create input{ max-width:10em; }
+.receipt{ margin-top:16px; padding:16px; border-radius:var(--r); background:var(--soft); }
+.receipt code{ display:block; margin:12px 0; font:600 1.12em/1.45 ui-monospace,monospace; overflow-wrap:anywhere; user-select:all; }
+#promo-list{ list-style:none; margin:0; padding:0; }
+#list-empty,#list-more{ margin-top:14px; }
+.promo-row{ display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:4px 12px; margin-top:12px; padding-top:12px; border-top:1px solid var(--line); }
+.promo-row p{ grid-column:1 / -1; color:var(--mute); font-size:.9em; }
+.promo-row code,#confirm-id{ color:var(--mute); font:.85em/1.4 ui-monospace,monospace; overflow-wrap:anywhere; }
+.promo-row code{ display:block; margin-top:4px; }
+.promo-row button{ min-height:30px; padding:0 12px; border:0; border-radius:999px; background:#fff; box-shadow:inset 0 0 0 1.5px #000; font-size:.9em; cursor:pointer; }
+.promo-row button:hover{ background:#000; color:#fff; }
+.promo-row button:disabled{ background:#C9C9CE; color:#fff; box-shadow:none; cursor:default; }
+
+@media (max-width:1100px){ :root{ --pad:20px; } }
+@media (max-width:760px){
+  :root{ --bar:46px; --pad:12px; }
+  .bar{ padding:6px 12px; }
+  .edit{ padding:16px var(--pad); }
+  .edit-head{ margin-bottom:16px; }
+  .filter-date{ display:block; }
+  .filter-date > span{ margin-bottom:4px; }
+}
+
+/* Пользователи */
+.stats-projects{ max-width:100%; flex-wrap:wrap; }
+@media (max-width:480px){ .stats-projects{ border-radius:var(--r); } }
+#users{ max-width:960px; }
+#users-search{ align-items:end; }
+#users-search .f{ margin:0; min-width:0; }
+#users-asof,#users-empty,#users-more{ margin-top:14px; }
+#users-list,.user-history-list{ list-style:none; padding:0; margin:0; }
+.user-card{ margin-top:12px; }
+.user-card h2{ font-size:1.05em; overflow-wrap:anywhere; }
+.user-card dl{ display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr)); gap:10px 16px; margin:12px 0; }
+.user-card dt{ color:var(--mute); font-size:.88em; }
+.user-card dd{ margin:2px 0 0; overflow-wrap:anywhere; }
+.user-history{ padding-top:12px; }
+.user-history-list li{ padding:8px 0; border-bottom:1px solid var(--line); overflow-wrap:anywhere; }
+.user-history .btn{ margin-top:8px; }
+#user-target{ overflow-wrap:anywhere; }

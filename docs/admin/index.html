@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="referrer" content="no-referrer">
+  <meta name="uglovato-admin-relay" content="https://functions.yandexcloud.net/d4e1qrrceneebio0uag0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; style-src-attr 'unsafe-inline'; connect-src https://functions.yandexcloud.net/d4e88h7r9h993fogte3l https://functions.yandexcloud.net/d4e1qrrceneebio0uag0; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>Статистика · Кабинет Угловато</title>
+  <link rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="./dashboard.css">
+  <script type="module" src="./cabinet.js?manual-entry=1"></script>
+</head>
+<body>
+  <header class="bar mast">
+    <div class="bar-l">
+      <a class="bar-title" href="../" aria-label="Угловато, главная">Угловато</a>
+      <span class="hint">Кабинет владельца</span>
+    </div>
+  </header>
+  <main class="edit">
+    <div class="edit-in edit-in--wide">
+      <header class="edit-head"><h1 id="section-title">Статистика</h1></header>
+      <div class="stats-project-bar">
+        <nav class="stats-projects" aria-label="Разделы кабинета">
+          <a id="tab-report" aria-current="page" href="./">Статистика</a>
+          <a id="tab-promo" href="./promo.html">Бесплатные промокоды</a>
+          <a id="tab-users" href="./users.html">Пользователи</a>
+        </nav>
+        <div class="row" id="session-actions" hidden>
+          <button class="btn btn--line btn--sm" type="button" id="retry" hidden>Повторить запрос</button>
+          <button class="btn btn--line btn--sm" type="button" id="logout">Выйти</button>
+        </div>
+      </div>
+      <div class="access-area">
+        <section class="gate-card login" id="access" aria-labelledby="login-heading">
+          <h1 id="login-heading">Вход в кабинет</h1>
+          <p>Ключ владельца открывает все разделы кабинета. Прежний ключ чтения открывает только статистику.</p>
+          <div id="manual-entry" hidden>
+            <form class="gate-card login" id="login" method="post" autocomplete="off">
+              <label class="f"><span id="key-label">Ключ доступа</span><input class="inp" type="password" id="key" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-bwignore="true" aria-describedby="key-hint" maxlength="256" required></label>
+              <div class="row"><button type="submit" class="btn">Войти</button></div>
+              <p class="hint" id="key-hint">После обновления или закрытия кабинета ключ потребуется снова.</p>
+            </form>
+          </div>
+        </section>
+        <p role="status" class="status" id="status"></p>
+        <p class="hint role-hint" id="readonly-hint" hidden>Этот ключ открывает только статистику. Для управления промокодами и пользователями введите ключ владельца.</p>
+        <p class="status" id="promo-status" role="status"></p>
+        <p class="status" id="users-status" role="status"></p>
+      </div>
+      <section id="report" class="pane pane--stats" data-stats-pane aria-label="Отчёт владельца" hidden>
+        <div class="db-filters" role="group" aria-label="Период">
+          <div class="seg db-seg">
+            <button type="button" data-act="stats-days" data-days="1" aria-pressed="false" title="Календарный день по Москве">Сегодня</button>
+            <button type="button" data-act="stats-days" data-days="7" aria-pressed="true">7 дней</button>
+            <button type="button" data-act="stats-days" data-days="30" aria-pressed="false">30 дней</button>
+            <button type="button" data-act="stats-days" data-days="90" aria-pressed="false">90 дней</button>
+            <button type="button" data-act="stats-days" data-days="0" aria-pressed="false">Всё время</button>
+          </div>
+          <select id="period" aria-label="Период" hidden>
+            <option value="1">Сегодня</option><option value="7" selected>7 дней</option>
+            <option value="30">30 дней</option><option value="90">90 дней</option><option value="0">Всё время</option>
+          </select>
+          <button class="btn btn--line btn--sm" type="button" id="refresh" data-act="stats-load">Обновить</button>
+          <label class="f filter-date db-filters-end"><span>По дату включительно</span><input class="inp" type="date" id="end-date"></label>
+        </div>
+        <div id="dashboard-root" class="db-body" data-stats-body></div>
+      </section>
+      <section id="users" aria-label="Пользователи" hidden>
+        <form id="users-search" class="row" autocomplete="off" method="post">
+          <label class="f"><span>Искать по</span><select id="users-search-by"><option value="accountId">ID аккаунта</option><option value="email">Почте</option><option value="username">Логину</option></select></label>
+          <label class="f"><span>Точное значение</span><input id="users-query" type="text" required autocomplete="off" autocapitalize="none" spellcheck="false"></label>
+          <button class="btn" id="users-search-submit">Найти</button>
+          <button class="btn btn--line" type="button" id="users-reset">Все пользователи</button>
+        </form>
+        <p class="hint" id="users-asof"></p>
+        <p id="users-empty" hidden></p>
+        <ul id="users-list" aria-label="Список пользователей"></ul>
+        <button class="btn btn--line btn--sm" type="button" id="users-more" hidden>Показать ещё</button>
+      </section>
+      <div id="management" hidden>
+        <section class="db-card">
+          <div class="section-head"><h2 id="issue-title" tabindex="-1">Выдать промокод</h2></div>
+          <p class="hint">Срок начинается при создании. Активировать код можно один раз до конца этого срока.</p>
+          <form id="create" class="row">
+            <label class="f"><span>Срок в днях (1–365)</span><input type="number" inputmode="numeric" id="duration" value="7" min="1" max="365" step="1" required></label>
+            <button class="btn">Создать код</button>
+          </form>
+          <div id="receipt" class="receipt" hidden>
+            <h3>Код создан</h3>
+            <p class="hint">Скопируй и передай код получателю. После закрытия здесь останутся только сведения о выдаче.</p>
+            <code id="issued-code"></code>
+            <div class="row"><button class="btn btn--sm" id="copy">Скопировать код</button><button id="dismiss" class="btn btn--line btn--sm">Скрыть код</button></div>
+          </div>
+        </section>
+        <section class="db-card">
+          <div class="section-head"><h2 id="list-title" tabindex="-1">Выданные промокоды</h2><button class="btn btn--line btn--sm" id="list-refresh">Обновить список</button></div>
+          <p class="hint">Сначала показаны новые коды. Даты и время указаны по Москве.</p>
+          <p id="list-empty" hidden>Пока нет выданных промокодов.</p>
+          <ul id="promo-list" aria-label="Выданные промокоды"></ul>
+          <button type="button" id="list-more" class="btn btn--line btn--sm" hidden>Показать ещё</button>
+        </section>
+      </div>
+    </div>
+    <dialog class="dlg" id="user-confirmation" aria-labelledby="user-confirm-title" aria-describedby="user-target user-consequence">
+      <div class="dlg-card">
+        <h2 id="user-confirm-title"></h2>
+        <p>ID аккаунта <code id="user-target"></code></p>
+        <p id="user-consequence"></p>
+        <div class="row">
+          <button class="btn btn--line" id="user-cancel" type="button" autofocus>Отмена</button>
+          <button class="btn" id="user-confirm" type="button">Подтвердить</button>
+        </div>
+      </div>
+    </dialog>
+    <dialog class="dlg" id="confirmation" aria-labelledby="confirm-title" aria-describedby="consequence">
+      <div class="dlg-card">
+        <h2 id="confirm-title">Отозвать промокод?</h2>
+        <p id="confirm-id"></p>
+        <p id="consequence">Код больше нельзя будет активировать. Если его уже активировали, доступ по этому коду прекратится. Оплаченный доступ и другие действующие промокоды сохранятся.</p>
+        <div class="row"><button class="btn btn--line" id="cancel" autofocus>Отмена</button><button class="btn" id="confirm-revoke">Отозвать код</button></div>
+      </div>
+    </dialog>
+  </main>
+</body>
+</html>

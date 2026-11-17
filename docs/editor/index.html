@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta name="theme-color" content="#ffffff">
+  <title>Доступ к редактору · Угловато</title>
+  <link rel="canonical" href="https://uglovato.ru/editor/">
+  <link rel="stylesheet" href="../register/fonts.css">
+  <link rel="stylesheet" href="../register/style.css">
+  <link rel="stylesheet" href="./access.css">
+  <script defer src="/register/config.js"></script>
+  <script defer src="./access.js"></script>
+</head>
+<body>
+  <header class="mast">
+    <div class="mast-inner">
+      <a class="brand" href="/" aria-label="Угловато, на главную"><span class="gem" aria-hidden="true"></span>Угловато</a>
+      <a class="support" href="mailto:uglovato@mail.ru">Поддержка</a>
+    </div>
+  </header>
+  <main class="window">
+    <section class="controls" aria-labelledby="access-title">
+      <div aria-live="polite" aria-atomic="true">
+        <h1 id="access-title" tabindex="-1">Доступ к редактору</h1>
+        <p class="intro" id="access-message">Проверяем доступ…</p>
+        <p class="access-rate" id="access-rate" hidden>Редактор и MCP · 150 ₽ за 7 дней</p>
+      </div>
+      <div class="access-actions">
+        <a class="button primary" id="access-account" href="/register/?next=account" hidden>Войти</a>
+        <a class="button" id="access-signup" href="/register/?next=account#signup" hidden>Создать аккаунт</a>
+        <button class="plain" id="access-retry" type="button" hidden>Проверить ещё раз</button>
+      </div>
+      <noscript><p>Чтобы открыть редактор, включите JavaScript.</p><a class="guest" href="/register/?next=account">В личный кабинет</a></noscript>
+    </section>
+  </main>
+</body>
+</html>

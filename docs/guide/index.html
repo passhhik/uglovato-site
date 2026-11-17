@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self'; img-src 'self'; font-src 'self'; script-src 'self'; connect-src https://functions.yandexcloud.net/d4e88h7r9h993fogte3l; base-uri 'none'; form-action 'none'">
+  <script defer src="../analytics-config.js"></script>
+  <script defer src="../welcome/visits.js"></script>
+  <title>Как сделать GLB из фото и открыть в Blender — Угловато</title>
+  <meta name="description" content="Как подготовить снимок, собрать модель и открыть GLB в Blender. Редактор и экспорт доступны в оплаченный период или по активному промокоду.">
+  <link rel="canonical" href="https://uglovato.ru/guide/">
+  <meta property="og:type" content="article">
+  <meta property="og:locale" content="ru_RU">
+  <meta property="og:site_name" content="Угловато">
+  <meta property="og:url" content="https://uglovato.ru/guide/">
+  <meta property="og:title" content="Как сделать GLB из фото и открыть в Blender">
+  <meta property="og:description" content="От снимка предмета до проверки его формы и текстуры. Пошаговая инструкция для редактора Угловато.">
+  <meta property="og:image" content="https://uglovato.ru/welcome/photo-to-model.jpg">
+  <meta property="og:image:alt" content="Фото жёлтой утки рядом с её низкополигональной моделью.">
+  <link rel="stylesheet" href="../welcome/fonts.css">
+  <link rel="stylesheet" href="../welcome/public.css">
+  <link rel="stylesheet" href="../privacy/style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "@id": "https://uglovato.ru/guide/#webpage",
+    "url": "https://uglovato.ru/guide/",
+    "name": "Как сделать GLB из фото и открыть в Blender",
+    "inLanguage": "ru",
+    "isPartOf": {
+      "@id": "https://uglovato.ru/#website"
+    },
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Угловато",
+          "item": "https://uglovato.ru/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Инструкция",
+          "item": "https://uglovato.ru/guide/"
+        }
+      ]
+    }
+  }
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#main">К содержанию</a>
+  <header class="mast wrap">
+    <a class="wordmark" href="../" aria-label="Угловато — на главную"><i class="gem" aria-hidden="true"></i>Угловато</a>
+    <nav class="site-nav" aria-label="По сайту">
+      <a class="how-link" href="../guide/" aria-current="page">Инструкция</a>
+      <a class="how-link" href="../connect/">Для ИИ</a>
+      <a class="how-link" href="../#pricing">Тарифы</a>
+    </nav>
+    <a class="account-entry" href="../register/?next=account">В кабинет</a>
+  </header>
+  <main class="reading wrap" id="main" tabindex="-1">
+    <header class="reading-head guide-intro">
+      <div>
+        <h1>Из фото в GLB для Blender</h1>
+        <p class="lead">Начните с одного снимка. В редакторе проверьте силуэт и толщину, затем откройте готовую модель в Blender. Для редактора и экспорта войдите в аккаунт с оплаченным периодом или активным промокодом.</p>
+        <div class="actions-row"><a class="primary" href="../register/?next=account">Перейти в кабинет</a><a class="text-link" href="../#pricing">Посмотреть тарифы</a></div>
+      </div>
+      <figure class="guide-sample">
+        <img src="../welcome/duck-mesh.webp" alt="Сетка утки из файла примера. Треугольники повторяют контур клюва, грудки и хвоста." width="600" height="520">
+        <figcaption><strong>Утка для практики</strong><span>Сетка модели</span></figcaption>
+      </figure>
+    </header>
+    <div class="reading-body">
+      <nav class="contents" aria-label="Содержание"><strong>На этой странице</strong><a href="#photo">Подготовка фото</a><a href="#angles">Ракурсы</a><a href="#export">Экспорт ZIP</a><a href="#blender">Проверка в Blender</a></nav>
+      <div class="chapters">
+    <section id="photo">
+      <h2>Выберите снимок с читаемым силуэтом</h2>
+      <p>После проверки доступа в кабинете откройте редактор и перетащите в него PNG, JPEG или WebP. У утки клюв хорошо виден в профиль. Для своего предмета выберите сторону, с которой заметна его характерная форма. Оставьте вокруг небольшой запас фона.</p>
+      <p>Прозрачный PNG уже отделён от фона. Если на обычном фото к контуру прилипли стол или тень, нажмите «Вырезать предмет» и поправьте границу.</p>
+    </section>
+
+    <section id="angles">
+      <h2>Проверьте объём с другого ракурса</h2>
+      <p>Потяните модель мышью. На телефоне включите «Вращать модель» и проведите пальцем. При повороте ближние части смещаются относительно дальних. Этот параллакс помогает заметить, например, что корпус утки получился слишком плоским. Кнопка «Сменить ракурс» покажет другой вид той же модели.</p>
+      <p>По одному силуэту редактор приблизительно подбирает толщину. Если вид сбоку расходится с оригиналом, сфотографируйте тот же предмет сбоку целиком, с прежней высоты и расстояния. В «Добавить другие ракурсы» загрузите фото в поле «Сбоку». Снимок в поле «Сзади» поможет уточнить заднюю поверхность и её цвет. Скрытые детали и точные размеры по снимкам восстановить нельзя.</p>
+    </section>
+
+    <section id="export">
+      <h2>Скачайте модель и распакуйте ZIP</h2>
+      <p>Нажмите «Скачать модель». Для Blender возьмите из архива файл <strong>.glb</strong> — в нём уже есть сетка и текстура. Если нужен OBJ, оставьте рядом файлы .obj, .mtl и PNG с текстурой. В файле preview.png сохранён вид модели из редактора.</p>
+    </section>
+
+    <section id="blender">
+      <h2>Осмотрите GLB в Blender</h2>
+      <ol>
+        <li>В Blender выберите <strong>File → Import → glTF 2.0</strong> и укажите распакованный .glb.</li>
+        <li>Выделите импортированный предмет и в окне 3D-вида выберите <strong>View → Frame Selected</strong>. Поверните вид и сравните контур спереди и сбоку.</li>
+        <li>Чтобы проверить цвет, включите <strong>Material Preview</strong> в правом верхнем углу 3D-вида. Для осмотра рёбер выберите сетку и нажмите <strong>Tab</strong>, чтобы перейти в режим редактирования.</li>
+      </ol>
+      <p>Строки ЭЛТ и дрожь вершин относятся к изображению на экране редактора. При импорте GLB эти эффекты не появятся. Если нужен именно такой кадр, в Угловато выберите «Сохранить картинку или видео».</p>
+    </section>
+      </div>
+    </div>
+  </main>
+  <footer class="foot wrap"><nav class="foot-links" aria-label="Переходы в конце страницы"><a class="how-link" href="../">На главную</a><a class="how-link" href="../terms/">Условия доступа</a><a class="how-link" href="../connect/">Подключить ассистента</a><a class="how-link" href="../privacy/#stats">Настройки статистики</a><a class="how-link" href="mailto:uglovato@mail.ru">Поддержка: uglovato@mail.ru</a></nav></footer>
+</body>
+</html>

@@ -1,0 +1,7 @@
+.access-actions {
+  display: grid;
+  gap: .5rem;
+}
+.access-actions:has(:not([hidden])) { margin-top: 1.25rem; }
+.access-actions .plain { justify-self: center; }
+.access-rate { margin-top: .9rem; font-weight: 600; }

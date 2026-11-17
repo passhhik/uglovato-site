@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="robots" content="noindex, follow">
+  <meta name="referrer" content="no-referrer">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src https://auth.uglovato.ru; base-uri 'none'; form-action 'none'">
+  <title>Вход в аккаунт — Угловато</title>
+  <link rel="stylesheet" href="./entry.css">
+  <script defer src="./go.js"></script>
+</head>
+<body>
+  <header><a href="/" aria-label="Угловато, главная">Угловато</a></header>
+  <main>
+    <section aria-live="polite" aria-atomic="true">
+      <h1 id="heading">Вход в аккаунт</h1>
+      <p id="status">Открываем страницу входа…</p>
+    </section>
+    <div id="actions" hidden>
+      <button id="retry" type="button">Попробовать ещё раз</button>
+      <a href="/#pricing">Посмотреть тарифы</a>
+      <a id="direct" href="https://auth.uglovato.ru/register/" rel="noreferrer">Перейти к форме напрямую</a>
+    </div>
+    <noscript>
+      <p>Для работы формы потребуется JavaScript.</p>
+      <nav aria-label="Вход и условия доступа">
+        <a href="https://auth.uglovato.ru/register/?next=account" rel="noreferrer">Войти в личный кабинет</a>
+        <a href="https://auth.uglovato.ru/register/?next=sets" rel="noreferrer">Войти и вернуться к наборам</a>
+        <a href="/#pricing">Посмотреть тарифы</a>
+      </nav>
+    </noscript>
+  </main>
+  <footer><a href="mailto:uglovato@mail.ru">uglovato@mail.ru</a></footer>
+</body>
+</html>

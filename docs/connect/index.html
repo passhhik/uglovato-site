@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="description" content="Как получить MCP 1.1.0 и ключ ассистента в кабинете с действующим доступом. Проверка доступа проходит онлайн, а фото и модель остаются на компьютере.">
+  <link rel="canonical" href="https://uglovato.ru/connect/">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="ru_RU">
+  <meta property="og:site_name" content="Угловато">
+  <meta property="og:url" content="https://uglovato.ru/connect/">
+  <meta property="og:title" content="Угловато для Claude и Codex — подключение через MCP">
+  <meta property="og:description" content="Как получить MCP 1.1.0 и ключ ассистента в кабинете с действующим доступом. Проверка доступа проходит онлайн, а фото и модель остаются на компьютере.">
+  <meta property="og:image" content="https://uglovato.ru/welcome/photo-to-model.jpg">
+  <meta property="og:image:type" content="image/jpeg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Исходное фото утки рядом с её низкополигональной 3D-моделью в Угловато.">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self'; font-src 'self'; img-src 'self'; script-src 'self'; connect-src https://functions.yandexcloud.net/d4e88h7r9h993fogte3l; base-uri 'none'; form-action 'none'">
+  <script defer src="../analytics-config.js"></script>
+  <script defer src="../welcome/visits.js"></script>
+  <title>Угловато для Claude и Codex — подключение через MCP</title>
+  <link rel="stylesheet" href="../welcome/fonts.css">
+  <link rel="stylesheet" href="../welcome/public.css">
+  <link rel="stylesheet" href="connect.css">
+  <script src="connect.js" defer></script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "@id": "https://uglovato.ru/connect/#webpage",
+    "url": "https://uglovato.ru/connect/",
+    "name": "Угловато для Claude и Codex",
+    "inLanguage": "ru",
+    "isPartOf": {
+      "@id": "https://uglovato.ru/#website"
+    }
+  }
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#main">К содержанию</a>
+  <header class="mast wrap">
+    <a class="wordmark" href="../" aria-label="Угловато — на главную"><i class="gem" aria-hidden="true"></i>Угловато</a>
+    <nav class="site-nav" aria-label="По сайту">
+      <a class="how-link" href="../guide/">Инструкция</a>
+      <a class="how-link" href="../connect/" aria-current="page">Для ИИ</a>
+      <a class="how-link" href="../#pricing">Тарифы</a>
+    </nav>
+    <a class="account-entry" href="../register/?next=account">В кабинет</a>
+  </header>
+
+  <main id="main" tabindex="-1" class="connect wrap">
+    <header class="intro">
+      <h1>Из фото в 3D через Claude или Codex</h1>
+      <div class="intro-copy">
+      <p class="lead">Для подключения нужен аккаунт с оплаченным периодом или активным промокодом. Пакет MCP 1.1.0 и ключ для ассистента доступны в личном кабинете.</p>
+      <div class="actions-row"><a class="primary" href="../register/?next=account#agent-tools">Подключить в кабинете</a><a class="text-link" href="../#pricing">Посмотреть тарифы</a></div>
+      <nav class="section-links" aria-label="На этой странице"><a href="#setup-title">Подключение</a><a href="#use-title">Первое задание</a><a href="#disconnect">Отключение</a></nav>
+      </div>
+    </header>
+    <div class="columns">
+      <div class="instructions">
+        <section class="terminal" aria-labelledby="setup-title">
+          <h2 id="setup-title" tabindex="-1">Подключение</h2>
+          <ol class="setup-steps">
+            <li>В кабинете откройте «Подключить ИИ-ассистента». Нажмите «Скачать MCP» и сохраните архив в папке проекта под именем <code>uglovato-mcp-1.1.0.tgz</code>.</li>
+            <li>Нажмите «Создать ключ для ассистента». Передайте ключ в окружение процесса MCP через <code>UGLOVATO_API_KEY</code>. Храните значение в личных настройках или менеджере секретов. Не вставляйте его в чат или репозиторий.</li>
+            <li>Для команд в терминале заранее задайте UGLOVATO_API_KEY в его окружении. Для Claude Desktop укажите ключ в личной конфигурации приложения. Перед каждой конвертацией инструмент проверяет доступ онлайн. Фото и готовый GLB остаются локальными.</li>
+          </ol>
+          <div class="setup">
+            <fieldset class="clients" hidden>
+              <legend class="platform">Выберите ассистента</legend>
+              <label><input type="radio" name="client" value="claude" checked><span>Claude Code</span></label>
+              <label><input type="radio" name="client" value="codex"><span>Codex</span></label>
+              <label><input type="radio" name="client" value="desktop"><span>Claude Desktop</span></label>
+            </fieldset>
+            <section data-client="claude" aria-label="Подключение Claude Code">
+              <h3 class="no-switch">Claude Code</h3>
+              <p class="requirements">На macOS или Linux откройте Bash или Zsh в папке проекта. Нужны Node.js 22+, npm и Claude Code.</p>
+              <pre class="command"><code id="claude-add">npm install --prefix .uglovato-tools ./uglovato-mcp-1.1.0.tgz &amp;&amp;
+claude mcp add --env "UGLOVATO_API_KEY=${UGLOVATO_API_KEY:?Задайте UGLOVATO_API_KEY}" --transport stdio --scope local uglovato -- node "$PWD/.uglovato-tools/node_modules/uglovato-mcp/cli.mjs" --workspace "$PWD"</code></pre>
+              <button type="button" class="copy" data-copy="claude-add" hidden>Скопировать команды</button>
+              <p class="scope">Подключение действует только для вас в этом проекте. После команды откройте новую сессию Claude Code в той же папке.</p>
+            </section>
+            <section data-client="codex" aria-label="Подключение Codex">
+              <h3 class="no-switch">Codex CLI / приложение</h3>
+              <p class="requirements">Для CLI и приложения на macOS или Linux выполните команды в Bash или Zsh из папки проекта. Нужны Node.js 22+, npm и Codex CLI.</p>
+              <pre class="command"><code id="codex-add">npm install --prefix .uglovato-tools ./uglovato-mcp-1.1.0.tgz &amp;&amp;
+codex mcp add --env "UGLOVATO_API_KEY=${UGLOVATO_API_KEY:?Задайте UGLOVATO_API_KEY}" uglovato -- node "$PWD/.uglovato-tools/node_modules/uglovato-mcp/cli.mjs" --workspace "$PWD"</code></pre>
+              <button type="button" class="copy" data-copy="codex-add" hidden>Скопировать команды</button>
+              <p class="scope">Настройка общая для Codex CLI и приложения. Угловато будет работать с папкой, из которой вы выполнили команду. Откройте в ней новый чат Codex.</p>
+            </section>
+            <section class="desktop-guide" data-client="desktop" aria-label="Подключение Claude Desktop на macOS">
+              <h3 class="no-switch">Claude Desktop на macOS</h3>
+              <p>На macOS для приложения Claude Desktop нужны Node.js 22+ и npm. Один раз установите Угловато из терминала в папке проекта. Интернет нужен также при каждой конвертации.</p>
+              <pre class="command"><code id="desktop-install">npm install --prefix .uglovato-tools ./uglovato-mcp-1.1.0.tgz</code></pre>
+              <button type="button" class="copy" data-copy="desktop-install" hidden>Скопировать команду установки</button>
+              <ol>
+                <li>В верхнем меню macOS откройте <strong>Claude → Settings → Developer → Edit Config</strong>.</li>
+                <li>Для пустого файла скопируйте весь JSON. Если настройки уже есть, добавьте поле <code>mcpServers</code> или только запись <code>uglovato</code>, если поле уже создано.</li>
+                <li>В <code>command</code> вставьте полный путь из <code>which node</code>. В обоих путях под <code>args</code> замените <code>/абсолютная/папка/проекта</code> на результат <code>pwd</code> из папки проекта. В поле <code>env</code> укажите свой ключ вместо текста в угловых скобках.</li>
+              </ol>
+              <pre class="command"><code id="desktop-config">{
+  "mcpServers": {
+    "uglovato": {
+      "command": "/opt/homebrew/bin/node",
+      "env": {"UGLOVATO_API_KEY": "&lt;ключ из кабинета&gt;"},
+      "args": [
+        "/абсолютная/папка/проекта/.uglovato-tools/node_modules/uglovato-mcp/cli.mjs",
+        "--workspace",
+        "/абсолютная/папка/проекта"
+      ]
+    }
+  }
+}</code></pre>
+              <button type="button" class="copy" data-copy="desktop-config" hidden>Скопировать JSON</button>
+              <p>Сохраните файл, закройте Claude через ⌘Q и запустите снова. Отправьте пример задания в чате приложения.</p>
+              <p class="desktop-note"><a href="https://modelcontextprotocol.io/docs/develop/connect-local-servers">Справка MCP для Claude Desktop</a></p>
+            </section>
+          </div>
+        </section>
+      </div>
+
+      <section class="example" aria-labelledby="use-title">
+        <h2 id="use-title" tabindex="-1">Первая модель в чате</h2>
+        <p>Сохраните свой снимок как <code>duck.webp</code> в папке проекта. После подключения отправьте задание в новом чате. Ассистент сохранит GLB рядом с фото.</p>
+        <div class="conversion" role="group" aria-label="Пример исходника и результата">
+          <figure><img src="../welcome/duck-input.webp" width="512" height="512" alt="Исходное фото жёлтой утки"><figcaption>Исходник</figcaption></figure>
+          <span aria-hidden="true">→</span>
+          <figure><img src="duck-preview.webp" width="480" height="360" alt="Низкополигональная модель утки"><figcaption>Готовая модель</figcaption></figure>
+        </div>
+        <blockquote id="prompt">С помощью Угловато собери модель из duck.webp в стиле PS1, вариант 1. Сохрани duck.glb рядом с исходником.</blockquote>
+        <button type="button" class="copy" data-copy="prompt" hidden>Скопировать задание</button>
+        <p><a href="../guide/#blender">Как проверить готовый GLB в Blender</a></p>
+        <details class="generate">
+          <summary>Задание с генерацией изображения</summary>
+          <blockquote id="generate-prompt">Если у тебя есть генерация изображений, создай PNG жёлтой резиновой утки в профиль на прозрачном фоне и сохрани его в папке проекта как duck.png. Если генерации нет, попроси у меня один файл. Затем вызови Угловато для этого изображения, выбери стиль PS1 и вариант 1. Сохрани duck.glb в той же папке и верни полный путь к готовой 3D-модели.</blockquote>
+          <button type="button" class="copy" data-copy="generate-prompt" hidden>Скопировать полное задание</button>
+        </details>
+      </section>
+    </div>
+    <details class="disconnect" id="disconnect">
+      <summary>Как отключить Угловато</summary>
+      <div data-client="claude">
+        <h3 class="no-switch">Claude Code</h3>
+        <p>Для Claude Code выполните команду в той же папке проекта.</p>
+        <div class="command"><code id="claude-remove">claude mcp remove --scope local uglovato</code></div>
+        <button type="button" class="copy" data-copy="claude-remove" hidden>Скопировать команду отключения</button>
+      </div>
+      <div data-client="codex">
+        <h3 class="no-switch">Codex CLI / приложение</h3>
+        <p>Команда удаляет подключение из общих настроек Codex.</p>
+        <div class="command"><code id="codex-remove">codex mcp remove uglovato</code></div>
+        <button type="button" class="copy" data-copy="codex-remove" hidden>Скопировать команду отключения</button>
+      </div>
+      <p class="desktop-note" data-client="desktop"><strong>Для Claude Desktop на macOS</strong> удалите только запись <code>uglovato</code> из <code>mcpServers</code> в Edit Config и перезапустите приложение через ⌘Q.</p>
+    </details>
+    <p class="feedback" role="status"></p>
+  </main>
+  <footer class="foot wrap"><nav class="foot-links" aria-label="Переходы в конце страницы"><a class="how-link" href="../">На главную</a><a class="how-link" href="../guide/">Инструкция по GLB</a><a class="how-link" href="../terms/">Условия доступа</a><a class="how-link" href="../privacy/#stats">Настройки статистики</a><a class="how-link" href="mailto:uglovato@mail.ru">Поддержка: uglovato@mail.ru</a></nav></footer>
+</body>
+</html>
