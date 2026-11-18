@@ -1,7 +1,11 @@
 (() => {
   const local = ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
   function editorEndpoint() {
-    if (location.origin === 'https://uglovato.ru') return 'https://auth.uglovato.ru/auth?op=editor/open';
+    if (location.origin === 'https://uglovato.ru') {
+      if (window.uglovatoAuth?.endpoint === '/api/account') return location.origin + '/api/account?op=editor/open';
+      if (window.uglovatoAuth?.endpoint === 'https://auth.uglovato.ru/auth') return 'https://auth.uglovato.ru/auth?op=editor/open';
+      return null;
+    }
     if (!local || !['http:', 'https:'].includes(location.protocol)) return null;
     const configured = window.uglovatoAuth?.endpoint;
     for (const path of ['/auth', '/api/account']) {

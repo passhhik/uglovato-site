@@ -19,20 +19,21 @@
       <span class="hint">Кабинет владельца</span>
     </div>
   </header>
-  <main class="edit">
+  <div class="app">
+    <nav class="rail" aria-label="Разделы кабинета">
+      <a class="rail-it" id="tab-report" aria-current="page" href="./"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 13.5V9.5M8 13.5V3M13 13.5V7"/></svg><span>Статистика</span></a>
+      <a class="rail-it" id="tab-promo" href="./promo.html"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 4h12v3a1 1 0 0 0 0 2v3H2V9a1 1 0 0 0 0-2zM10 5.5v1m0 3v1"/></svg><span>Промокоды</span></a>
+      <a class="rail-it" id="tab-users" href="./users.html"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="5" r="2.5"/><path d="M3 13c0-5 10-5 10 0"/></svg><span>Пользователи</span></a>
+    </nav>
+    <main class="edit">
     <div class="edit-in edit-in--wide">
-      <header class="edit-head"><h1 id="section-title">Статистика</h1></header>
-      <div class="stats-project-bar">
-        <nav class="stats-projects" aria-label="Разделы кабинета">
-          <a id="tab-report" aria-current="page" href="./">Статистика</a>
-          <a id="tab-promo" href="./promo.html">Бесплатные промокоды</a>
-          <a id="tab-users" href="./users.html">Пользователи</a>
-        </nav>
+      <header class="edit-head edit-title">
+        <h1 id="section-title">Статистика</h1>
         <div class="row" id="session-actions" hidden>
           <button class="btn btn--line btn--sm" type="button" id="retry" hidden>Повторить запрос</button>
           <button class="btn btn--line btn--sm" type="button" id="logout">Выйти</button>
         </div>
-      </div>
+      </header>
       <div class="access-area">
         <section class="gate-card login" id="access" aria-labelledby="login-heading">
           <h1 id="login-heading">Вход в кабинет</h1>
@@ -64,7 +65,9 @@
             <option value="30">30 дней</option><option value="90">90 дней</option><option value="0">Всё время</option>
           </select>
           <button class="btn btn--line btn--sm" type="button" id="refresh" data-act="stats-load">Обновить</button>
+          <span class="hint" id="compare-note" data-stats-note></span>
           <label class="f filter-date db-filters-end"><span>По дату включительно</span><input class="inp" type="date" id="end-date"></label>
+          <button class="linkish" type="button" id="reset-end" hidden>До сегодня</button>
         </div>
         <div id="dashboard-root" class="db-body" data-stats-body></div>
       </section>
@@ -76,7 +79,7 @@
           <button class="btn btn--line" type="button" id="users-reset">Все пользователи</button>
         </form>
         <p class="hint" id="users-asof"></p>
-        <p id="users-empty" hidden></p>
+        <p class="db-empty" id="users-empty" hidden></p>
         <ul id="users-list" aria-label="Список пользователей"></ul>
         <button class="btn btn--line btn--sm" type="button" id="users-more" hidden>Показать ещё</button>
       </section>
@@ -98,7 +101,7 @@
         <section class="db-card">
           <div class="section-head"><h2 id="list-title" tabindex="-1">Выданные промокоды</h2><button class="btn btn--line btn--sm" id="list-refresh">Обновить список</button></div>
           <p class="hint">Сначала показаны новые коды. Даты и время указаны по Москве.</p>
-          <p id="list-empty" hidden>Пока нет выданных промокодов.</p>
+          <p class="db-empty" id="list-empty" hidden>Пока нет выданных промокодов.</p>
           <ul id="promo-list" aria-label="Выданные промокоды"></ul>
           <button type="button" id="list-more" class="btn btn--line btn--sm" hidden>Показать ещё</button>
         </section>
@@ -123,6 +126,7 @@
         <div class="row"><button class="btn btn--line" id="cancel" autofocus>Отмена</button><button class="btn" id="confirm-revoke">Отозвать код</button></div>
       </div>
     </dialog>
-  </main>
+    </main>
+  </div>
 </body>
 </html>

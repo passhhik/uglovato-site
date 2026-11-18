@@ -1,4 +1,4 @@
-import { post, getEndpoint, getSession, getSetAccess, expressSetInterest, startSetCheckout, submitCredentials, logout, emailRecoveryEnabled, emailAction } from './client.js?v=account7';
+import { post, getEndpoint, getSession, getSetAccess, expressSetInterest, startSetCheckout, submitCredentials, logout, emailRecoveryEnabled, emailAction } from './client.js?v=account9';
 import { supportsPasskeys, verifyPasskey } from './passkey.js';
 
 const byId = id => document.getElementById(id);
@@ -26,12 +26,23 @@ let passwordReauth = false;
 const siteOrigin = location.origin === 'https://auth.uglovato.ru' ? 'https://uglovato.ru' : location.origin;
 const params = new URLSearchParams(location.search);
 const next = params.getAll('next'), from = params.getAll('from');
+const siteForm = location.origin === 'https://uglovato.ru' && getEndpoint() === location.origin + '/api/account';
 const toSets = next.length === 1 && next[0] === 'sets';
-const toAccount = next.length === 1 && next[0] === 'account';
+const toAccount = (next.length === 1 && next[0] === 'account') || (siteForm && !toSets);
 let accountSection = toAccount && ['#agent-tools', '#offers', '#promo-code'].includes(location.hash)
   ? location.hash.slice(1) : null;
-const fromEditor = location.origin === 'https://auth.uglovato.ru' && (toSets || toAccount) &&
+let fromEditor = (siteForm || location.origin === 'https://auth.uglovato.ru') && (toSets || toAccount) &&
   from.length === 1 && from[0] === 'editor';
+if (siteForm && (toSets || toAccount)) {
+  const ticket = /^#editor-([0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})$/.exec(location.hash);
+  if (ticket && window.BroadcastChannel) {
+    try {
+      sessionStorage.setItem('uglovato.editor.return', ticket[1]);
+      history.replaceState(null, '', location.pathname + '?next=' + (toSets ? 'sets' : 'account') + '&from=editor');
+      fromEditor = true;
+    } catch { /* The user can still return to the editor manually. */ }
+  }
+}
 const destinationHelp = toSets ? 'Войдите, чтобы проверить доступ и вернуться к наборам.'
   : 'В кабинете можно проверить доступ к редактору и MCP или активировать промокод.';
 function editorDestination(sets) {
@@ -1120,4 +1131,6 @@ window.addEventListener('pageshow', event => {
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') check({ background: true });
 });
-if (!readMailLink()) check();
+if (siteForm && (toAccount || toSets) && ['#return-editor', '#resume-sets'].includes(location.hash)) {
+  import('./go.js');
+} else if (!readMailLink()) check();

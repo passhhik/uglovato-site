@@ -86,9 +86,11 @@ export function createAdminReport({ getProof, setAccess, opened, denied, failed 
   let request;
 
   function showPeriod() {
+    el('reset-end').hidden = !date.value;
+    el('compare-note').textContent = '';
     for (const button of buttons) {
-      const historicalDay = button.dataset.days === '1' && date.value && date.value !== todayMSK();
-      button.setAttribute('aria-pressed', String(button.dataset.days === selector.value && !historicalDay));
+      if (button.dataset.days === '1') button.textContent = date.value && date.value !== todayMSK() ? '1 день' : 'Сегодня';
+      button.setAttribute('aria-pressed', String(button.dataset.days === selector.value));
     }
   }
 
@@ -137,8 +139,16 @@ export function createAdminReport({ getProof, setAccess, opened, denied, failed 
       const opening = el('report').hidden;
       el('report').hidden = false;
       opened();
+      if (previous) {
+        const displayDate = day => day.split('-').reverse().join('.');
+        el('compare-note').textContent = 'Сравнение с ' + displayDate(shiftDate(previousEnd, 1 - span)) +
+          (span === 1 ? '' : ' – ' + displayDate(previousEnd));
+      }
       const notes = [];
-      if (days.length < span) notes.push('Получено дней: ' + days.length + ' из ' + span + '.');
+      const available = Math.min(span, Math.max(0, countDays(firstReportDay, end)));
+      const received = days.filter(day => day.date >= firstReportDay).length;
+      if (received < available) notes.push('Получено дней: ' + received + ' из ' + available + '.');
+      if (available < span) notes.push('Счётчик работает с 16.11.2026.');
       if (comparisonFailed) notes.push('Прошлый период временно недоступен.');
       reportStatus(notes.join(' '));
       if (opening) buttons.find(b => b.dataset.days === selector.value)?.focus({preventScroll: true});
@@ -155,13 +165,12 @@ export function createAdminReport({ getProof, setAccess, opened, denied, failed 
 
   for (const button of buttons) {
     button.addEventListener('click', () => {
-      const resetDate = button.dataset.days === '1' && Boolean(date.value);
-      if (selector.value === button.dataset.days && !resetDate) return;
-      if (resetDate) date.value = '';
+      if (selector.value === button.dataset.days) return;
       selector.value = button.dataset.days;
       report();
     });
   }
+  el('reset-end').onclick = () => { date.value = ''; report(); };
   el('refresh').onclick = report;
   selector.onchange = report;
   date.max = todayMSK();

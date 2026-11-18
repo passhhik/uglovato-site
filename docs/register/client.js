@@ -10,6 +10,7 @@ export function getEndpoint() {
       ? new URL(raw, location.origin) : new URL(raw);
     if (url.username || url.password || url.search || url.hash) return null;
     if (['https://auth.uglovato.ru', 'https://uglovato.ru', 'https://www.uglovato.ru'].includes(location.origin)) {
+      if (location.origin === 'https://uglovato.ru' && url.href === location.origin + '/api/account') return url.href;
       return url.href === 'https://auth.uglovato.ru/auth' ? url.href : null;
     }
     // The register page's CSP allows a local API through a same-origin proxy.
@@ -32,7 +33,8 @@ export class AuthError extends Error {
 export function emailRecoveryEnabled() {
   const endpoint = getEndpoint();
   if (window.uglovatoAuth?.emailRecovery !== true || !endpoint) return false;
-  return location.origin === 'https://auth.uglovato.ru' ||
+  return (location.origin === 'https://uglovato.ru' && endpoint === location.origin + '/api/account') ||
+    location.origin === 'https://auth.uglovato.ru' ||
     (loopback.has(location.hostname) && new URL(endpoint).origin === location.origin);
 }
 

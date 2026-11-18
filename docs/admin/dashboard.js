@@ -29,8 +29,8 @@ const hourLabel = h => String(h).padStart(2, '0') + ':00';
 const empty = message => `<p class="hint">${esc(message)}</p>`;
 
 const metrics = [
-  ['visits', 'Визиты'], ['editor', 'Открыли редактор'], ['converted', 'Визиты с экспортом'],
-  ['exports', 'Экспорты ZIP'], ['rate', 'Конверсия в экспорт'], ['downloads', 'Скачивали набор'],
+  ['visits', 'Визиты'], ['editor', 'Открыли редактор'], ['converted', 'Визиты с ZIP модели'],
+  ['exports', 'Экспорты ZIP'], ['rate', 'Доля визитов с ZIP модели'], ['downloads', 'Визиты с ZIP набора'],
 ];
 const formatMetric = (key, value) => key === 'rate' ? percent(value) : num(value);
 
@@ -52,13 +52,23 @@ function summary(days) {
   const visits = total(d => d.visits), converted = total(d => d.converted);
   // A zero-visit day cannot establish measurement for a legacy visit on
   // another day. Sum the steps actually observed, with coverage beside them.
-  const observed = visits > 0 ? days.filter(d => d.visits > 0 && d.funnel?.visitsWithPages !== 0) : days;
-  const step = read => sum(observed.map(read).filter(isCount));
+  const editorCount = d => count(d.funnel?.editorVisits) ?? pageCount(d, 'pages', 'editor');
+  const observed = visits > 0 ? days.filter(d => d.visits > 0 && d.funnel?.visitsWithPages !== 0 &&
+    (d.funnel?.visitsWithPages > 0 || editorCount(d) !== null)) : days;
+  const step = read => sum(observed.map(read));
+  const editorStep = (d, key) => editorCount(d) === 0 ? 0 : count(d.funnel?.[key]);
+  const editorFiles = d => {
+    const measured = editorStep(d, 'editorFileVisits');
+    if (measured !== null) return measured;
+    // Older reports know the union exactly when no set was downloaded.
+    return d.funnel?.set_download === 0 ? editorStep(d, 'editorExportVisits') : null;
+  };
   return {
     visits, converted, rate: rate(converted, visits),
-    editor: step(d => count(d.funnel?.editorVisits) ?? pageCount(d, 'pages', 'editor')),
-    editorExport: step(d => d.funnel?.editorExportVisits),
-    repeatExport: step(d => d.funnel?.editorRepeatExportVisits),
+    editor: step(editorCount),
+    editorExport: step(d => editorStep(d, 'editorExportVisits')),
+    repeatExport: step(d => editorStep(d, 'editorRepeatExportVisits')),
+    editorFiles: step(editorFiles),
     exports: total(d => d.exports),
     downloads: total(d => d.funnel?.set_download),
   };
@@ -108,13 +118,13 @@ function tip(title, rows) {
   return `data-tip="${esc(title)}" data-tip-rows="${esc(JSON.stringify(rows))}" aria-label="${esc(title + '. ' + text)}"`;
 }
 
-function deltaHTML(cur, prev, has, fmt = num) {
+function deltaHTML(cur, prev, has, fmt, isRate) {
   if (!has || !Number.isFinite(cur) || !Number.isFinite(prev)) return '';
   const d = cur - prev;
   if (!prev && !cur) return `<span class="db-delta">как в прошлый период: ${esc(fmt(0))}</span>`;
   const dir = d > 0 ? 'up' : d < 0 ? 'down' : 'flat';
   const mark = d > 0 ? '▲' : d < 0 ? '▼' : '=';
-  const rel = prev ? ` · ${d > 0 ? '+' : ''}${num(d / prev * 100)}%` : '';
+  const rel = isRate ? ` · ${d > 0 ? '+' : ''}${num(d)} п. п.` : prev ? ` · ${d > 0 ? '+' : ''}${num(d / prev * 100)}%` : '';
   return `<span class="db-delta is-${dir}"><span aria-hidden="true">${mark}</span> было ${esc(fmt(prev))}${esc(rel)}</span>`;
 }
 
@@ -138,7 +148,7 @@ function kpi(key, label, cur, prev, has, series, sub) {
     <span class="db-kpi-l">${esc(label)}</span>
     <b class="db-kpi-v">${esc(fmt(cur))}</b>
     ${sub ? `<span class="db-kpi-sub">${esc(sub)}</span>` : ''}
-    ${deltaHTML(cur, prev, has, fmt)}${spark(series)}
+    ${deltaHTML(cur, prev, has, fmt, key === 'rate')}${spark(series)}
   </div>`;
 }
 
@@ -150,11 +160,12 @@ function niceMax(m) {
 
 function trendHTML(cur, prev, has, period) {
   if (!cur.length) return empty('Нет данных за период.');
+  const missing = cur.some(b => b.s.visits == null) ? '<span><i class="db-lk is-unknown"></i>нет данных</span>' : '';
   const top = niceMax(Math.max(1, ...cur.concat(prev).map(b => b.s.visits ?? 0)));
   const ticks = [0, top / 2, top], every = Math.ceil(cur.length / 8);
   const hourly = period === 1, unit = hourly ? 'по часам, МСК' : cur[0].week ? 'по неделям' : 'по дням';
   return `<div class="db-trend">
-    <div class="db-legend"><span><i class="db-lk db-lk--bar"></i>этот период</span>${has ? '<span><i class="db-lk db-lk--tick"></i>прошлый период</span>' : ''}<span class="hint">${unit}</span></div>
+    <div class="db-legend"><span><i class="db-lk db-lk--bar"></i>этот период</span>${has ? '<span><i class="db-lk db-lk--tick"></i>прошлый период</span>' : ''}${missing}<span class="hint">${unit}</span></div>
     <div class="db-plot">
       <div class="db-yaxis" aria-hidden="true">${ticks.slice().reverse().map(t => `<span>${num(t)}</span>`).join('')}</div>
       <div class="db-area">
@@ -189,36 +200,53 @@ function dayTableHTML(cur, period) {
     [hourly ? 'Час, МСК' : 'Дата, МСК', ...selected.map(([, l]) => l)], rows)}</details>`;
 }
 
-function funnelHTML(s) {
-  const steps = [['Зашли на сайт', s.visits], ['Открыли редактор', s.editor],
-    ['Экспортировали ZIP из редактора', s.editorExport], ['Экспортировали повторно', s.repeatExport]];
-  return `<ol class="db-funnel">${steps.map(([label, n]) => {
-    const share = rate(n, s.visits);
-    return `<li tabindex="0" ${tip(label, [[num(n), 'визитов'], [percent(share), 'от всех визитов']])}>
-      <span class="db-f-l">${esc(label)}</span><span class="db-f-track">${share != null ? `<i style="width:${share}%"></i>` : ''}</span><b>${num(n)}</b><span class="db-f-p">${percent(share)}</span></li>`;
-  }).join('')}</ol>`;
-}
-
-function coverageHTML(days, visits) {
+function pageCoverage(days) {
   let lower = 0, upper = 0;
   for (const day of days) {
-    const covered = day.funnel?.visitsWithPages;
-    if (isCount(covered)) {
-      lower += covered;
-      upper += covered;
-    } else {
-      // A legacy page histogram counts a visit once per page. Its sum is
-      // only an upper bound on visits with known pages.
-      const counts = list(day.traffic?.pages).filter(r => labelFor(pages, r?.name) && isCount(r.visits)).map(r => r.visits);
-      const editor = count(day.funnel?.editorVisits) ?? 0;
-      lower += Math.max(editor, 0, ...counts);
-      upper += counts.length ? Math.min(day.visits, Math.max(editor, sum(counts))) : editor ? day.visits : 0;
+    if (isCount(day.funnel?.visitsWithPages)) {
+      lower += day.funnel.visitsWithPages;
+      upper += day.funnel.visitsWithPages;
+      continue;
     }
+    // A legacy histogram can count one visit on several pages.
+    const counts = list(day.traffic?.pages)
+      .filter(r => labelFor(pages, r?.name) && isCount(r.visits)).map(r => r.visits);
+    const editor = count(day.funnel?.editorVisits) ?? 0;
+    lower += Math.max(editor, 0, ...counts);
+    upper += counts.length ? Math.min(day.visits, Math.max(editor, sum(counts))) : editor ? day.visits : 0;
   }
-  const known = lower === upper ? num(lower) : `${num(lower)}–${num(upper)}`;
-  const coverage = visits > 0 ? ` Страницы известны для ${known} из ${num(visits)} визитов.` : '';
-  return empty('Доля от всех визитов. Шаги редактора учитывают только визиты с записанными страницами. У старых визитов эти сведения могут отсутствовать.' + coverage +
-    ' Повторный экспорт — две или больше операций за один визит.');
+  return { lower, upper };
+}
+
+function funnelHTML(s, days) {
+  const { lower, upper } = pageCoverage(days);
+  const known = days.length && lower === upper ? lower : null;
+  const steps = [
+    ['Измеренные визиты', s.visits, s.visits, 'измеренных визитов'],
+    ['Открыли редактор', s.editor, known, 'визитов с известными страницами'],
+    ['Передали ZIP одной модели', s.editorExport, s.editor, 'визитов редактора'],
+    ['Передали ещё один ZIP модели', s.repeatExport, s.editorExport, 'визитов редактора с ZIP модели'],
+  ];
+  const rows = steps.map(([label, n, base, unit]) => {
+    const share = rate(n, base);
+    return `<li tabindex="0" ${tip(label, [[num(n), 'визитов'], [num(base), unit]])}>
+      <span class="db-f-l">${esc(label)}</span><span class="db-f-track">${share != null ? `<i style="width:${share}%"></i>` : ''}</span>
+      <b>${num(n)}</b><span class="db-f-p">${percent(share)}</span>
+      <span class="hint db-f-base">${num(n)} из ${num(base)} ${unit}</span></li>`;
+  }).join('');
+  const coverage = s.visits > 0 ? `Страницы известны для ${lower === upper ? num(lower) : num(lower) + '–' + num(upper)} из ${num(s.visits)} визитов. ` : '';
+  return `<ol class="db-funnel">${rows}</ol>` + empty(coverage + 'Повторный экспорт считается в пределах одного визита.');
+}
+
+function resultHTML(s) {
+  const share = rate(s.editorFiles, s.editor);
+  let note = 'В отчёте недостаточно данных для расчёта.';
+  if (s.editor === 0) note = 'Визитов с записанной страницей редактора за эти дни нет.';
+  else if (share !== null) note = `${num(s.editorFiles)} из ${num(s.editor)} визитов с записанной страницей редактора.`;
+  return `<section class="db-card" data-section="result"><h3>Из редактора в файл</h3>
+    <p class="db-result-value">${percent(share)}</p><p>${esc(note)}</p>
+    <p class="hint">Учитывается передача ZIP модели или набора для скачивания. Оба действия в одном визите дают один результат.</p>
+    <details class="db-details"><summary>Границы измерения</summary><p class="hint">Счётчик не видит импорт в Blender, результат MCP и качество модели. Покупки, продления и выручка в этот отчёт не поступают.</p></details></section>`;
 }
 
 function heatHTML(days, visits) {
@@ -231,6 +259,7 @@ function heatHTML(days, visits) {
     hours.forEach((n, h) => { row[h] = (row[h] ?? 0) + n; covered += n; });
   }
   const max = Math.max(1, ...grid.flat());
+  const missing = grid.some(row => row.includes(null)) ? ' · <i class="db-cell is-unknown"></i> нет данных' : '';
   const level = n => n ? Math.min(4, Math.ceil(n / max * 4)) : 0;
   // One tab stop for the map. All cells, including zeroes, support arrow navigation.
   let entry = grid.flat().findIndex(n => n > 0);
@@ -241,7 +270,7 @@ function heatHTML(days, visits) {
     const i = d * 24 + h, title = `${weekdays[d]}, ${hourLabel(h)}–${hourLabel((h + 1) % 24)} МСК`;
     return `<i class="db-cell l${level(n)}${n == null ? ' is-unknown' : ''}" data-cell="${i}" tabindex="${i === entry ? 0 : -1}" ${tip(title, [[num(n), 'визитов']])}></i>`;
   }).join('')}`).join('')}
-    </div><div class="db-heat-key hint">меньше <i class="db-cell l1"></i><i class="db-cell l2"></i><i class="db-cell l3"></i><i class="db-cell l4"></i> больше · МСК</div>
+    </div><div class="db-heat-key hint">меньше <i class="db-cell l1"></i><i class="db-cell l2"></i><i class="db-cell l3"></i><i class="db-cell l4"></i> больше · МСК${missing}</div>
     ${visits > covered ? empty(`Час начала известен для ${num(covered)} из ${num(visits)} визитов.`) : ''}`;
 }
 
@@ -361,7 +390,7 @@ function sectionsHTML(days, total) {
   const top = Math.max(1, ...rows.map(r => r.views ?? 0));
   return scrollTable('Разделы', `<table class="db-table db-table--cases" aria-label="Разделы"><thead><tr><th scope="col">Раздел</th><th scope="col">Страница входа</th><th scope="col">Посетили</th><th scope="col">Доля визитов</th></tr></thead><tbody>
     ${rows.map(r => `<tr><td>${esc(pages[r.name])}</td><td>${num(r.entries)}</td><td>${r.views == null ? '' : `<span class="db-inline"><i style="width:${r.views / top * 100}%"></i></span>`}${num(r.views)}</td><td>${percent(rate(r.views, total))}</td></tr>`).join('')}
-    </tbody></table>`) + empty('Учтены визиты с записанными страницами. Каждый раздел учитывается один раз за визит. Доля рассчитана от всех визитов за период.');
+    </tbody></table>`) + empty('Учтены визиты с записанными страницами. Каждый раздел учитывается один раз за визит. Доля показывает зарегистрированные посещения раздела среди всех измеренных визитов за полученные дни.');
 }
 
 function tariffsHTML(days) {
@@ -372,7 +401,7 @@ function tariffsHTML(days) {
     ['Любой тариф', total('offerVisits'), total('interestVisits')]];
   const keys = ['set_offer_week', 'set_interest_week', 'set_offer_month', 'set_interest_month', 'set_download'];
   const daily = days.map(d => [fullDate(d.date), ...keys.map(k => num(count(d.funnel?.[k])))]);
-  return tableHTML('Интерес к тарифам', ['Тариф', 'Видели цену', 'Оставили заявку'], rows) +
+  return tableHTML('Интерес к тарифам', ['Тариф', 'Видели цену в наборах', 'Отметили интерес'], rows) +
     `<details class="db-details"><summary>Наборы по дням</summary>${tableHTML('Наборы по дням',
       ['Дата, МСК', 'Цена недели', 'Заявка на неделю', 'Цена месяца', 'Заявка на месяц', 'Скачивали набор'], daily)}</details>`;
 }
@@ -408,23 +437,27 @@ function dashBody(days, previous, period, end, recent) {
   const from = period === 0 ? firstReportDay : dateKey(Date.parse(end) - (period - 1) * dayMs);
   const range = from < end ? fullDate(from) + ' – ' + fullDate(end) : fullDate(end);
   let notice = '';
-  if (!days.length) notice = 'За выбранный период нет данных счётчика.';
+  if (!days.length) notice = 'За выбранный период нет данных счётчика. Выберите другой период или обновите отчёт.';
   else if (!s.visits) notice = 'За этот период измеренных визитов не было.';
+  const metricNotes = {
+    visits: 'измерено за полученные дни', editor: 'по записанным страницам', converted: 'хотя бы один ZIP модели',
+    exports: 'операций с одной моделью', rate: `${num(s.converted)} из ${num(s.visits)} визитов`, downloads: 'хотя бы один ZIP набора',
+  };
   return `<div class="db-kpis">${metrics.map(([key, label]) =>
-    kpi(key, label, s[key], p[key], has, cur.map(b => b.s[key]), key === 'editor' ? 'по записанным страницам' : '')).join('')}</div>
+    kpi(key, label, s[key], p[key], has, cur.map(b => b.s[key]), metricNotes[key])).join('')}</div>
     ${notice ? `<p class="db-empty">${esc(notice)}</p>` : ''}
+    <div class="db-row"><section class="db-card" data-section="funnel"><h3>Путь до экспорта</h3>${funnelHTML(s, days)}</section>${resultHTML(s)}</div>
     <section class="db-card db-card--wide" data-section="trend"><h3>Визиты</h3><p class="hint">${esc(range)} · МСК</p>
       ${trendHTML(cur, prev, has, period)}${period === 1 && days.length ? empty('По часам показаны визиты с известным временем начала.') : ''}${dayTableHTML(cur, period)}</section>
-    <div class="db-row"><section class="db-card" data-section="funnel"><h3>Воронка</h3>${funnelHTML(s)}${coverageHTML(days, s.visits)}</section>
-      <section class="db-card" data-section="heat"><h3>Когда заходят</h3>${heatHTML(days, s.visits)}</section></div>
-    <section class="db-card db-card--wide" data-section="tags"><h3>Отклики — заходы по вашим ссылкам</h3>${fromsHTML(groups)}
+    <section class="db-card db-card--wide" data-section="heat"><h3>Когда заходят</h3>${heatHTML(days, s.visits)}</section>
+    <section class="db-card db-card--wide" data-section="tags"><h3>Переходы по ссылкам с меткой</h3>${fromsHTML(groups)}
       ${s.visits ? empty(`Источник известен для ${num(s.visits - unknown)} из ${num(s.visits)} визитов.`) : ''}
       ${groups.some(r => r.kind === 'other') ? empty('В «Другие источники» попадают метки и домены сверх суточного лимита в 64 источника.') : ''}
       ${linkBuilderHTML()}</section>
     <div class="db-grid4">${barsHTML('Откуда', 'sources', groups, s.visits)}
       ${dimensions.map(([key, title]) => barsHTML(title, key, dimensionRows(days, key), s.visits)).join('')}</div>
     <section class="db-card db-card--wide" data-section="pages"><h3>Разделы</h3>${sectionsHTML(days, s.visits)}</section>
-    <section class="db-card db-card--wide" data-section="tariffs"><h3>Тарифы и наборы</h3>${tariffsHTML(days)}</section>
+    <section class="db-card db-card--wide" data-section="tariffs"><h3>Интерес к тарифам в окне наборов</h3><p class="hint">Считаются визиты с событием в редакторе. Показы цен и действия в кабинете сюда не попадают.</p>${tariffsHTML(days)}</section>
     <div data-ai-report></div>
     <section class="db-card db-card--wide" data-section="recent"><h3>Последние визиты в браузере</h3>
       ${recent.length ? `<ul class="db-visits">${recent.slice(0, 20).map(visitHTML).join('')}</ul>` : empty('Нет данных')}

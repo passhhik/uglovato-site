@@ -1,13 +1,7 @@
 /* ---------- статистика: дашборд ---------- */
 /* Одна краска данных — чёрная, как у всей админки; прошлый период и фон — серые. Цифры — текстом, не цветом */
 .pane--stats{ max-width:1180px; }
-.stats-project-bar{ display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; margin:-8px 0 18px; }
-.stats-projects{ display:flex; gap:2px; padding:3px; background:var(--soft); border-radius:999px; }
-.stats-projects a{ display:grid; place-items:center; min-height:36px; padding:0 14px; border-radius:999px; color:var(--fg); text-decoration:none; }
-.stats-projects a[aria-current]{ background:var(--fg); color:var(--paper); }
 @media (max-width:760px){
-  .stats-project-bar{ margin:0 0 12px; }
-  .stats-projects a,.stats-project-bar .btn{ min-height:44px; padding:0 10px; }
   .pane--stats .db-seg{ max-width:100%; flex-wrap:wrap; }
   .pane--stats .db-seg button{ padding:0 9px; }
 }
@@ -15,6 +9,8 @@
 .st-co{ flex:1 1 220px; margin:0; }
 .st-link{ flex:1 1 260px; padding:8px 10px; border-radius:8px; background:var(--soft); font-size:.88em; overflow-wrap:anywhere; }
 .db-filters{ position:sticky; top:0; z-index:3; display:flex; flex-wrap:wrap; align-items:center; gap:10px 14px; margin:0 calc(-1 * var(--pad)) 14px; padding:10px var(--pad); background:#fff; border-bottom:1px solid var(--line); }
+#compare-note:empty{ display:none; }
+@media (max-width:760px){ #compare-note{ order:1; flex-basis:100%; } }
 .db-filters-end{ margin-left:auto; }
 .db-seg{ display:inline-flex; padding:3px; border-radius:999px; background:var(--soft); }
 .db-seg button{ min-height:30px; padding:0 14px; border:0; border-radius:999px; background:none; cursor:pointer; white-space:nowrap; }
@@ -69,7 +65,10 @@
 
 /* воронка и полоски */
 .db-funnel{ margin:0 0 8px; padding:0; list-style:none; display:grid; gap:10px; }
-.db-funnel li{ display:grid; grid-template-columns:minmax(0,1fr) auto 3em; grid-template-areas:"l n p" "t t t"; gap:4px 10px; align-items:baseline; }
+.db-funnel li{ display:grid; grid-template-columns:minmax(0,1fr) auto 3em; grid-template-areas:"l n p" "t t t" "base base base"; gap:4px 10px; align-items:baseline; }
+.db-f-base{ grid-area:base; }
+.db-result-value{ margin:.15em 0; font-size:2.4em; font-weight:700; }
+[data-section="result"] .hint{ margin-top:8px; }
 .db-f-l{ grid-area:l; }
 .db-funnel b{ grid-area:n; font-variant-numeric:tabular-nums; }
 .db-f-p{ grid-area:p; color:var(--mute); font-size:.88em; text-align:right; }
@@ -93,6 +92,9 @@
 .db-heat .db-cell:hover,.db-heat .db-cell:focus-visible{ outline:2px solid #000; outline-offset:1px; }
 .db-heat-key{ display:flex; align-items:center; gap:3px; margin-top:8px; }
 .db-heat-key .db-cell{ width:12px; min-height:12px; }
+
+.db-col.is-unknown,.db-cell.is-unknown,.db-lk.is-unknown{ background:repeating-linear-gradient(135deg, #fff 0 3px, #dddde0 3px 4px); }
+.db-lk.is-unknown{ border:1px solid var(--line); }
 
 /* таблицы */
 .db-table{ width:100%; border-collapse:collapse; font-size:.95em; }
