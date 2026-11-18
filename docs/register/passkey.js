@@ -1,4 +1,4 @@
-import { AuthError, post } from './client.js';
+import { AuthError, post } from './client.js?v=browser1';
 
 function decode(value) {
   if (typeof value !== 'string' || !/^[\w-]+$/.test(value)) throw new AuthError('invalid_reply');

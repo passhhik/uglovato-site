@@ -1,5 +1,5 @@
-import { post, getEndpoint, getSession, getSetAccess, expressSetInterest, startSetCheckout, submitCredentials, logout, emailRecoveryEnabled, emailAction } from './client.js?v=account9';
-import { supportsPasskeys, verifyPasskey } from './passkey.js';
+import { post, getEndpoint, getAgentArchive, browserMode, getSession, getSetAccess, expressSetInterest, startSetCheckout, submitCredentials, logout, emailRecoveryEnabled, emailAction } from './client.js?v=browser1';
+import { supportsPasskeys, verifyPasskey } from './passkey.js?v=browser1';
 
 const byId = id => document.getElementById(id);
 const authButtons = ['reauth', 'logout'].map(byId);
@@ -26,11 +26,13 @@ let passwordReauth = false;
 const siteOrigin = location.origin === 'https://auth.uglovato.ru' ? 'https://uglovato.ru' : location.origin;
 const params = new URLSearchParams(location.search);
 const next = params.getAll('next'), from = params.getAll('from');
-const siteForm = location.origin === 'https://uglovato.ru' && getEndpoint() === location.origin + '/api/account';
+const siteForm = browserMode();
 const toSets = next.length === 1 && next[0] === 'sets';
 const toAccount = (next.length === 1 && next[0] === 'account') || (siteForm && !toSets);
-let accountSection = toAccount && ['#agent-tools', '#offers', '#promo-code'].includes(location.hash)
-  ? location.hash.slice(1) : null;
+function sectionFromURL() {
+  return toAccount && ['#agent-tools', '#offers', '#promo-code'].includes(location.hash) ? location.hash.slice(1) : null;
+}
+let accountSection = sectionFromURL();
 let fromEditor = (siteForm || location.origin === 'https://auth.uglovato.ru') && (toSets || toAccount) &&
   from.length === 1 && from[0] === 'editor';
 if (siteForm && (toSets || toAccount)) {
@@ -187,18 +189,7 @@ function closeAgentTools() {
 }
 
 async function downloadAgentPackage(signal) {
-  const endpoint = getEndpoint();
-  if (!endpoint) throw new Error();
-  const url = new URL(endpoint);
-  url.search = '?op=editor/agent-package';
-  const response = await fetch(url, {
-    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}',
-    credentials: 'include', redirect: 'error', cache: 'no-store', referrerPolicy: 'strict-origin', signal
-  });
-  if (response.status !== 200 || response.redirected || response.url !== url.href) {
-    throw Object.assign(new Error(), { status: response.status });
-  }
-  const blob = await response.blob();
+  const blob = await getAgentArchive(signal);
   const magic = new Uint8Array(await blob.slice(0, 2).arrayBuffer());
   if (magic[0] !== 0x1f || magic[1] !== 0x8b) throw new Error();
   if (signal.aborted) return;
@@ -686,6 +677,10 @@ function showAccount(session) {
 }
 
 function messageFor(error) {
+  if (error.code === 'browser_storage') return 'Браузер не может сохранить вход. Разрешите хранение данных для uglovato.ru и попробуйте снова.';
+  if (error.code === 'browser_crypto') return 'Для защищённого входа откройте сайт в обновлённом браузере.';
+  if (error.code === 'session_changed') return 'Аккаунт изменился в другой вкладке. Обновите страницу.';
+
   if (error.name === 'NotAllowedError') return 'Подтверждение не получено. Попробуйте ещё раз или выберите другой ключ.';
   if (error.name === 'AbortError') return 'Действие отменено. Можно попробовать ещё раз.';
   if (error.name === 'SecurityError' || error.name === 'NotSupportedError') return 'Ключ недоступен в этом браузере или на этом устройстве. Попробуйте другой браузер или устройство.';
@@ -780,7 +775,7 @@ async function continueAfterSignIn(signal) {
     }
     if (signal.aborted) return;
     if (!session.authenticated) {
-      showGuest('Сеанс не подтверждён. Разрешите этому сайту использовать cookie и войдите снова.');
+      showGuest(siteForm ? 'Сеанс не сохранился. Разрешите сайту хранить данные и войдите снова.' : 'Сеанс не подтверждён. Разрешите этому сайту использовать cookie и войдите снова.');
       return;
     }
     form.reset();
@@ -882,7 +877,10 @@ async function act(kind) {
   } catch (error) {
     if (operation !== controller) return;
     if (controller.signal.aborted && !accountId && kind === 'reauth') return;
-    if (error.code === 'unauthenticated' && accountId) {
+    if (error.code === 'local_logout') {
+      showGuest('Вы вышли на этом устройстве. Сервер не подтвердил завершение сеанса.');
+      focusTarget = byId('entry-title');
+    } else if (error.code === 'unauthenticated' && accountId) {
       showGuest('Сеанс завершён. Чтобы продолжить, войдите снова.');
       focusTarget = byId('entry-title');
     } else {
@@ -899,6 +897,7 @@ async function act(kind) {
 }
 
 function credentialError(error, action) {
+  if (['browser_crypto','browser_storage','session_changed'].includes(error.code)) return messageFor(error);
   if (error.code === 'email_taken') return 'Этот адрес уже используется. Войдите с ним или укажите другую почту.';
   if (error.code === 'invalid_email') return emailHelp;
   if (error.code === 'invalid_name') return nameHelp;
@@ -1044,7 +1043,11 @@ for (const button of document.querySelectorAll('[data-mode]')) {
     syncModeFromURL();
   });
 }
-window.addEventListener('hashchange', syncModeFromURL);
+window.addEventListener('hashchange', () => {
+  accountSection = sectionFromURL();
+  if (accountSection && accountId) check({background:true});
+  else syncModeFromURL();
+});
 window.addEventListener('popstate', syncModeFromURL);
 byId('link-username').addEventListener('click', () => editCredentials('link'));
 byId('cancel-link').addEventListener('click', async () => {

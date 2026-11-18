@@ -1,4 +1,4 @@
-import { getEndpoint, getSession } from '../register/client.js';
+import { getEndpoint, getSession } from '../register/client.js?v=browser1';
 
 const link = document.getElementById('editorAccount');
 // Only the editor tab that started sign-in should resume its draft.

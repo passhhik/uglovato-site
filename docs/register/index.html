@@ -2,35 +2,186 @@
 <html lang="ru">
 <head>
   <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self'; connect-src https://functions.yandexcloud.net/d4ervn55pqa3ehtihll1; base-uri 'none'; object-src 'none'; form-action 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, follow">
   <meta name="referrer" content="no-referrer">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src https://auth.uglovato.ru; base-uri 'none'; form-action 'none'">
-  <title>Вход в аккаунт — Угловато</title>
-  <link rel="stylesheet" href="./entry.css">
-  <script defer src="./go.js"></script>
+  <meta name="theme-color" content="#ffffff">
+  <title>Вход и регистрация · Угловато</title>
+  <link rel="stylesheet" href="./fonts.css">
+  <link rel="stylesheet" href="./style.css?v=account7">
+  <script src="./config.js?v=browser1" defer></script>
+  <script type="module" src="./page.js?v=browser1"></script>
 </head>
 <body>
-  <header><a href="/" aria-label="Угловато, главная">Угловато</a></header>
-  <main>
-    <section aria-live="polite" aria-atomic="true">
-      <h1 id="heading">Вход в аккаунт</h1>
-      <p id="status">Открываем страницу входа…</p>
-    </section>
-    <div id="actions" hidden>
-      <button id="retry" type="button">Попробовать ещё раз</button>
-      <a href="/#pricing">Посмотреть тарифы</a>
-      <a id="direct" href="https://auth.uglovato.ru/register/" rel="noreferrer">Перейти к форме напрямую</a>
+  <header class="mast">
+    <div class="mast-inner">
+      <a class="brand" id="home" href="https://uglovato.ru/" aria-label="Угловато, на главную"><span class="gem" aria-hidden="true"></span>Угловато</a>
+      <a class="support" href="mailto:uglovato@mail.ru">Поддержка</a>
     </div>
-    <noscript>
-      <p>Для работы формы потребуется JavaScript.</p>
-      <nav aria-label="Вход и условия доступа">
-        <a href="https://auth.uglovato.ru/register/?next=account" rel="noreferrer">Войти в личный кабинет</a>
-        <a href="https://auth.uglovato.ru/register/?next=sets" rel="noreferrer">Войти и вернуться к наборам</a>
-        <a href="/#pricing">Посмотреть тарифы</a>
-      </nav>
-    </noscript>
+  </header>
+  <main class="window">
+    <div class="controls">
+      <section id="entry" aria-labelledby="entry-title">
+        <h1 id="entry-title" tabindex="-1">Вход в аккаунт</h1>
+        <div id="credential-view" hidden>
+          <p id="entry-help" class="intro" hidden></p>
+          <div id="auth-modes" class="mode-switch" role="group" aria-label="Вход или регистрация">
+            <button type="button" data-mode="login" aria-controls="credentials" aria-pressed="true">Вход</button>
+            <button type="button" data-mode="register" aria-controls="credentials" aria-pressed="false">Регистрация</button>
+          </div>
+          <form id="credentials" method="post" autocomplete="on">
+            <div class="field" id="name-field" hidden>
+              <label for="name">Имя</label>
+              <input id="name" name="name" autocomplete="nickname" aria-describedby="name-hint" disabled>
+              <p class="hint" id="name-hint">Можно указать псевдоним.</p>
+            </div>
+            <div class="field" id="email-field" hidden>
+              <label for="email">Электронная почта</label>
+              <input id="email" name="email" type="text" inputmode="email" autocomplete="email" autocapitalize="none" autocorrect="off" spellcheck="false" aria-describedby="email-hint" disabled>
+              <p class="hint" id="email-hint">Для входа в аккаунт. Письма не отправляем.</p>
+            </div>
+            <div class="field" id="username-field">
+              <label for="username">Почта или прежний логин</label>
+              <input id="username" name="username" type="text" inputmode="email" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" required>
+            </div>
+            <div class="field" id="recovery-field" hidden>
+              <label for="recovery-code">Код восстановления</label>
+              <input id="recovery-code" aria-describedby="entry-help" name="recoveryCode" type="password" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" disabled>
+            </div>
+            <div class="field">
+              <div class="field-heading">
+                <label for="password" id="password-label">Пароль</label>
+                <button type="button" class="plain recover-action" data-mode="recover" aria-controls="credentials">Забыли пароль?</button>
+              </div>
+              <div class="password-input">
+                <input id="password" name="password" type="password" autocomplete="current-password" required>
+                <button type="button" id="show-password" aria-controls="password" aria-label="Показать пароль">Показать</button>
+              </div>
+              <p class="hint" id="password-hint" hidden></p>
+            </div>
+            <p class="field-error" id="credential-error" tabindex="-1" role="status"></p>
+            <button class="primary" id="credential-submit" type="submit">Войти</button>
+          </form>
+          <button type="button" class="plain" id="cancel-link" hidden>Вернуться в аккаунт</button>
+          <button type="button" class="plain" id="back-to-letter" hidden>Вернуться к подтверждению</button>
+        </div>
+      </section>
+      <section id="mail-view" aria-labelledby="mail-title" hidden>
+        <h1 id="mail-title" tabindex="-1"></h1>
+        <p class="intro" id="mail-help"></p>
+        <form id="mail-form" method="post">
+          <div class="field" id="mail-address-field" hidden>
+            <label for="mail-address">Электронная почта</label>
+            <input id="mail-address" name="email" type="text" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false" required disabled>
+          </div>
+          <div class="field" id="mail-password-field" hidden>
+            <label for="mail-password">Новый пароль</label>
+            <div class="password-input">
+              <input id="mail-password" name="password" type="password" autocomplete="new-password" aria-describedby="mail-password-help" required disabled>
+              <button class="password-toggle" type="button" id="mail-show-password" aria-label="Показать пароль" aria-controls="mail-password">Показать</button>
+            </div>
+            <p class="hint" id="mail-password-help">От 15 символов. Можно придумать фразу из нескольких слов.</p>
+          </div>
+          <button class="primary" id="mail-submit" type="submit"></button>
+        </form>
+        <div class="mail-actions">
+          <button class="plain" id="mail-signin" type="button">Войти в нужный аккаунт</button>
+          <button class="plain" id="mail-request" type="button">Запросить новое письмо</button>
+          <button class="plain" id="mail-code" type="button">Восстановить по сохранённому коду</button>
+          <button class="plain" id="mail-back" type="button">Вернуться ко входу</button>
+          <button class="primary" id="mail-continue" type="button">Открыть редактор</button>
+        </div>
+      </section>
+      <section id="account" aria-labelledby="account-title" hidden>
+        <div class="account-heading">
+          <h1 id="account-title" tabindex="-1">Ваш аккаунт</h1>
+          <button type="button" class="plain" id="logout">Выйти</button>
+        </div>
+        <div id="account-profile" hidden>
+          <p id="profile-name"></p>
+          <p id="profile-email" class="hint"></p>
+          <p id="email-state" class="hint" hidden></p>
+          <button type="button" class="plain" id="send-verification" hidden>Отправить письмо для подтверждения</button>
+        </div>
+        <button type="button" class="plain" id="link-username" hidden>Добавить почту</button>
+        <button type="button" id="reauth" hidden>Подтвердить вход</button>
+        <div class="access">
+          <p class="plan" id="plan"></p>
+          <p class="hint" id="period" hidden></p>
+        </div>
+        <a id="open-editor" class="button primary editor-link" href="https://uglovato.ru/editor/">Открыть редактор</a>
+        <details id="agent-tools" class="receipt-code" hidden>
+          <summary>Подключить ИИ-ассистента</summary>
+          <p class="hint">В доступ к редактору входит MCP. Скачайте пакет, затем создайте ключ для своего ассистента.</p>
+          <div class="receipt-actions">
+            <button type="button" id="agent-download">Скачать MCP</button>
+            <button type="button" id="agent-issue">Создать ключ для ассистента</button>
+          </div>
+          <div class="field" id="agent-key-field" hidden>
+            <label for="agent-key">Ключ для ассистента</label>
+            <input id="agent-key" type="text" readonly autocomplete="off" spellcheck="false" aria-describedby="agent-expiry">
+            <p class="hint" id="agent-expiry"></p>
+            <button type="button" id="agent-copy">Скопировать ключ</button>
+          </div>
+          <p id="agent-status" class="hint" role="status"></p>
+          <a id="agent-guide" href="https://uglovato.ru/connect/" target="_blank" rel="noopener noreferrer">Инструкция по подключению</a>
+        </details>
+        <form id="promo-form" method="post" autocomplete="off">
+          <label for="promo-code">Промокод на тестовый доступ</label>
+          <div class="promo-input">
+            <input id="promo-code" aria-describedby="promo-status" type="text" maxlength="128" required spellcheck="false" autocapitalize="characters">
+            <button type="submit" id="promo-submit" aria-label="Активировать промокод">Активировать</button>
+          </div>
+          <span class="hint" id="promo-status" role="status"></span>
+        </form>
+        <details id="offers">
+          <summary>Тариф для редактора и MCP</summary>
+          <a class="button" id="export-sets" href="https://uglovato.ru/editor/#sets" hidden>Открыть наборы для экспорта</a>
+          <div id="offer-terms" hidden>
+            <p id="offer-mode-hint"></p>
+            <a id="tariff-terms" href="https://uglovato.ru/terms/" target="_blank" rel="noopener noreferrer">Условия доступа</a>
+            <p class="offer-price" id="week-price" hidden><span>7 дней</span><strong>150 ₽</strong></p>
+            <div id="month-terms" hidden>
+              <p class="offer-price" id="month-price" hidden><span>30 дней, продление вручную</span><strong>299 ₽</strong></p>
+              <p class="hint" id="month-interest-hint" hidden>Можно выбрать один срок — неделю или месяц.</p>
+            </div>
+          </div>
+          <p id="offer-state" tabindex="-1" role="status" aria-live="polite"></p>
+          <div class="offer-actions">
+            <button type="button" id="want-week" hidden>Интересует неделя</button>
+            <button type="button" id="want-month" hidden>Интересует месяц</button>
+            <button type="button" id="offers-retry" hidden>Обновить сведения</button>
+          </div>
+        </details>
+      </section>
+      <section id="recovery-receipt" aria-labelledby="receipt-title" hidden>
+        <h1 id="receipt-title" tabindex="-1">Аккаунт создан</h1>
+        <p class="intro" id="receipt-help">Сохраните код на случай, если забудете пароль. Он показывается один раз.</p>
+        <details id="reserve-code" open>
+          <summary id="reserve-summary" hidden>Сохранить резервный код</summary>
+          <div class="receipt-code">
+            <label for="issued-code">Код восстановления</label>
+            <textarea id="issued-code" aria-describedby="receipt-help" rows="2" readonly autocomplete="off" spellcheck="false"></textarea>
+            <div class="receipt-actions">
+              <button type="button" id="copy-code">Скопировать</button>
+              <button type="button" id="save-code">Скачать TXT</button>
+            </div>
+          </div>
+        </details>
+        <button type="button" class="primary" id="code-saved">Открыть редактор</button>
+      </section>
+      <p class="status" id="status" role="status" aria-live="polite" aria-atomic="true"></p>
+      <noscript>
+        <p class="status">Для входа включите JavaScript.</p>
+      </noscript>
+      <div class="recovery">
+        <button type="button" class="plain" id="retry" hidden>Проверить ещё раз</button>
+        <button type="button" class="plain" id="cancel" hidden>Отменить</button>
+      </div>
+      <a class="guest" id="guest" href="https://uglovato.ru/editor/">На страницу редактора <span aria-hidden="true">→</span></a>
+    </div>
+    <footer class="account-footer"><a href="https://uglovato.ru/privacy/">Как хранятся данные</a></footer>
   </main>
-  <footer><a href="mailto:uglovato@mail.ru">uglovato@mail.ru</a></footer>
 </body>
 </html>

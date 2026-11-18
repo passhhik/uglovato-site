@@ -1,18 +1,4 @@
 (() => {
-  const local = ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
-  function editorEndpoint() {
-    if (location.origin === 'https://uglovato.ru') {
-      if (window.uglovatoAuth?.endpoint === '/api/account') return location.origin + '/api/account?op=editor/open';
-      if (window.uglovatoAuth?.endpoint === 'https://auth.uglovato.ru/auth') return 'https://auth.uglovato.ru/auth?op=editor/open';
-      return null;
-    }
-    if (!local || !['http:', 'https:'].includes(location.protocol)) return null;
-    const configured = window.uglovatoAuth?.endpoint;
-    for (const path of ['/auth', '/api/account']) {
-      if (configured === path || configured === location.origin + path) return location.origin + path + '?op=editor/open';
-    }
-    return null;
-  }
   const title = document.getElementById('access-title');
   const message = document.getElementById('access-message');
   const account = document.getElementById('access-account');
@@ -80,26 +66,8 @@
     request = controller;
     const timeout = setTimeout(() => controller.abort(), 20000);
     try {
-      const endpoint = editorEndpoint();
-      if (!endpoint) throw new Error();
-      const response = await fetch(endpoint, {
-        method: 'POST', credentials: 'include', cache: 'no-store', redirect: 'error',
-        referrerPolicy: 'strict-origin', headers: { 'Content-Type': 'application/json' },
-        body: '{}', signal: controller.signal
-      });
-      if (request !== controller) return;
-      if (response.url !== endpoint || response.redirected) throw new Error();
-      if (response.status === 401) { show('guest'); return; }
-      if (response.status === 402 || response.status === 403) {
-        const reason = await response.json().catch(() => null);
-        if (request !== controller) return;
-        if (response.status === 403 && reason?.error?.code !== 'access_required') throw new Error();
-        show('denied');
-        return;
-      }
-      const type = (response.headers.get('Content-Type') || '').split(';')[0].trim().toLowerCase();
-      if (response.status !== 200 || type !== 'text/html') throw new Error();
-      const html = await response.text();
+      const { getEditorHTML } = await import('../register/client.js?v=browser1');
+      const html = await getEditorHTML(controller.signal);
       if (request !== controller) return;
       const parsed = new DOMParser().parseFromString(html, 'text/html');
       if (!parsed.head.querySelector('meta[name="uglovato-editor"][content="licensed"]')) throw new Error();
@@ -107,8 +75,11 @@
       document.open();
       document.write(html);
       document.close();
-    } catch {
-      if (request === controller) show('error');
+    } catch (error) {
+      if (request !== controller) return;
+      if (error.status === 401) show('guest');
+      else if (error.status === 402 || (error.status === 403 && error.code === 'access_required')) show('denied');
+      else show('error');
     } finally {
       clearTimeout(timeout);
       if (request === controller) request = null;

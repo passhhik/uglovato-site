@@ -1,24 +1,21 @@
 // Load config.js before importing this module, also on the editor page.
 const loopback = new Set(['localhost', '127.0.0.1', '[::1]']);
 
+const site = 'https://uglovato.ru';
+const account = 'https://auth.uglovato.ru';
+const browserEndpoint = 'https://functions.yandexcloud.net/d4ervn55pqa3ehtihll1';
+
+export function browserMode() { return location.origin === site; }
+
 export function getEndpoint() {
+  if (browserMode()) return window.uglovatoAuth?.endpoint === 'browser-v1' ? browserEndpoint : null;
   const setting = window.uglovatoAuth?.endpoint;
-  if (typeof setting !== 'string' || !setting.trim()) return null;
+  if (location.origin === account) return setting === account + '/auth' ? setting : null;
+  if (!loopback.has(location.hostname) || typeof setting !== 'string') return null;
   try {
-    const raw = setting.trim();
-    const url = raw.startsWith('/') && !raw.startsWith('//')
-      ? new URL(raw, location.origin) : new URL(raw);
-    if (url.username || url.password || url.search || url.hash) return null;
-    if (['https://auth.uglovato.ru', 'https://uglovato.ru', 'https://www.uglovato.ru'].includes(location.origin)) {
-      if (location.origin === 'https://uglovato.ru' && url.href === location.origin + '/api/account') return url.href;
-      return url.href === 'https://auth.uglovato.ru/auth' ? url.href : null;
-    }
-    // The register page's CSP allows a local API through a same-origin proxy.
-    const local = loopback.has(location.hostname) && url.origin === location.origin && url.protocol === 'http:';
-    return local || (location.protocol === 'https:' && url.origin === location.origin) ? url.href : null;
-  } catch {
-    return null;
-  }
+    const url = new URL(setting, location.origin);
+    return ['/auth', '/api/account'].some(path => url.href === location.origin + path) ? url.href : null;
+  } catch { return null; }
 }
 
 export class AuthError extends Error {
@@ -33,43 +30,78 @@ export class AuthError extends Error {
 export function emailRecoveryEnabled() {
   const endpoint = getEndpoint();
   if (window.uglovatoAuth?.emailRecovery !== true || !endpoint) return false;
-  return (location.origin === 'https://uglovato.ru' && endpoint === location.origin + '/api/account') ||
+  return browserMode() ||
     location.origin === 'https://auth.uglovato.ru' ||
     (loopback.has(location.hostname) && new URL(endpoint).origin === location.origin);
 }
 
-export async function post(op, body = {}, signal) {
+const issuing = new Set(['username/login', 'username/register', 'username/recover', 'username/link', 'login/verify']);
+
+async function request(op, body, signal, binary) {
   if (op.startsWith('email/') && !emailRecoveryEnabled()) throw new AuthError('email_unavailable');
   const endpoint = getEndpoint();
   if (!endpoint) throw new AuthError('not_configured');
   const url = new URL(endpoint);
+  if (!/^[a-z]+(?:\/[a-z-]+)?$/.test(op)) throw new AuthError('invalid_operation');
   url.search = '?op=' + op;
+  const signed = browserMode();
+  const transport = signed ? await import('./browser-identity.js') : null;
+  const exactBody = JSON.stringify(body);
+  const auth = signed ? await transport.prepare(op, exactBody) : null;
   const controller = new AbortController();
   const cancel = () => controller.abort();
   if (signal?.aborted) cancel();
-  signal?.addEventListener('abort', cancel, { once: true });
-  const timer = setTimeout(cancel, 15000);
+  signal?.addEventListener('abort', cancel, { once:true });
+  const timer = setTimeout(cancel, binary ? 20000 : 15000);
   try {
-    const result = await fetch(url, {
-      method: 'POST', credentials: 'include', redirect: 'error', cache: 'no-store',
-      keepalive: op === 'email/send-verification',
-      referrerPolicy: 'strict-origin', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body), signal: controller.signal
+    const response = await fetch(url, {
+      method:'POST', credentials:signed ? 'omit' : 'include', redirect:'error', cache:'no-store',
+      keepalive:op === 'email/send-verification', referrerPolicy:'strict-origin',
+      headers:{'Content-Type':'application/json', ...auth?.headers}, body:exactBody, signal:controller.signal
     });
-    const json = await result.json().catch(() => null);
-    if (!result.ok) {
-      throw new AuthError(json?.error?.code || 'unavailable', result.status, result.headers.get('Retry-After'));
+    if (response.redirected || response.url !== url.href) throw new AuthError('invalid_reply');
+    if (!response.ok) {
+      const data = await response.json().catch(() => null);
+      const code = data?.error?.code || 'unavailable';
+      if (auth?.identity.sid && op !== 'logout' && response.status === 401 && code === 'unauthenticated') {
+        await transport.replaceSession(auth.identity, null);
+      }
+      throw new AuthError(code, response.status, response.headers.get('Retry-After'));
     }
+    if (binary === 'html') {
+      if (response.status !== 200 || response.headers.get('Content-Type')?.split(';')[0].trim() !== 'text/html')
+        throw new AuthError('invalid_reply');
+      return await response.text();
+    }
+    if (binary === 'archive') {
+      if (response.status !== 200) throw new AuthError('invalid_reply');
+      return await response.blob();
+    }
+    const json = await response.json().catch(() => null);
     if (!json || typeof json !== 'object') throw new AuthError('invalid_reply');
+    if (signed && issuing.has(op)) {
+      if ((op === 'login/verify' ? json.verified : json.authenticated) !== true ||
+          typeof json.browserSessionId !== 'string' || !/^[A-Za-z0-9_-]{43}$/.test(json.browserSessionId) ||
+          json.browserSessionId === auth.identity.sid)
+        throw new AuthError('invalid_reply');
+      if (!await transport.replaceSession(auth.identity,json.browserSessionId)) throw new AuthError('session_changed');
+    }
     return json;
   } catch (error) {
+    if (signed && op === 'logout') throw new AuthError('local_logout');
     if (controller.signal.aborted && !signal?.aborted) throw new AuthError('network_timeout');
     throw error;
   } finally {
     clearTimeout(timer);
     signal?.removeEventListener('abort', cancel);
+    if (signed && op === 'logout' && !await transport.replaceSession(auth.identity, null))
+      throw new AuthError('session_changed');
   }
 }
+
+export function post(op, body = {}, signal) { return request(op, body, signal); }
+export function getEditorHTML(signal) { return request('editor/open', {}, signal, 'html'); }
+export function getAgentArchive(signal) { return request('editor/agent-package', {}, signal, 'archive'); }
 
 export async function emailAction(action, fields, signal) {
   const results = { 'request-reset': 'accepted', reset: 'reset', 'send-verification': 'accepted', verify: 'verified' };
@@ -81,6 +113,8 @@ export async function emailAction(action, fields, signal) {
 export async function getSession(signal, { profile = false } = {}) {
   if (!getEndpoint()) return { authenticated: false };
   try {
+    if (browserMode() && !(await (await import('./browser-identity.js')).existingIdentity())?.sid)
+      return { authenticated:false };
     const session = await post('session', profile ? { profile: true } : {}, signal);
     if (session.authenticated !== true || typeof session.accountId !== 'string' || !session.accountId ||
         !Number.isFinite(Date.parse(session.expiresAt)) || !['free', 'plus'].includes(session.access?.plan) ||
